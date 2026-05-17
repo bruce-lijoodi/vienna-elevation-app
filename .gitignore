@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.env
+data/srtm.zip
+data/srtm_40_03.zip

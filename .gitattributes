@@ -1,0 +1,4 @@
+*.pkl filter=lfs diff=lfs merge=lfs -text
+*.tif filter=lfs diff=lfs merge=lfs -text
+*.hdr filter=lfs diff=lfs merge=lfs -text
+*.tfw filter=lfs diff=lfs merge=lfs -text
