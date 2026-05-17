@@ -368,6 +368,51 @@
       }
     }
 
+    /* Sidebar collapse button inside nav panel — only shown on mobile */
+    #nav-controls-btn {
+      display: none;
+      background: rgba(255,255,255,0.12);
+      border: none;
+      color: white;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      align-self: center;
+    }
+    #nav-controls-btn:hover { background: rgba(255,255,255,0.2); }
+
+    @media (max-width: 768px) {
+      /* Sidebar slides away during navigation */
+      #sidebar {
+        transition: max-height 0.35s ease, padding-top 0.35s ease, padding-bottom 0.35s ease;
+        max-height: 9999px; /* large enough to never clip normally */
+      }
+
+      #app.nav-mode #sidebar {
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        overflow: hidden;
+      }
+
+      /* Map fills the full app height when sidebar is hidden */
+      #app.nav-mode #map {
+        flex: 1;
+      }
+
+      #nav-controls-btn {
+        display: block;
+      }
+
+      /* When user manually re-opens controls during nav, restore sidebar */
+      #app.nav-mode.controls-open #sidebar {
+        max-height: 9999px;
+        padding-top: 14px;
+        padding-bottom: 14px;
+      }
+    }
+
     /* Extra-small phones (≤ 420px) */
     @media (max-width: 420px) {
       /* Stack router toggle vertically */
@@ -463,6 +508,7 @@
 
   <!-- Navigation panel — fixed at the bottom when navigating -->
   <div id="nav-panel">
+    <button id="nav-controls-btn" onclick="toggleNavControls()">▲ Show controls</button>
     <div class="nav-header">
       <span id="nav-route-name">FLATTEST</span>
       <span id="nav-status">✅ On route</span>
@@ -1131,6 +1177,8 @@
       document.getElementById("nav-status").textContent = "📡 Getting location…";
       document.getElementById("nav-status").style.color = "white";
       document.getElementById("nav-panel").style.display = "flex";
+      document.getElementById("app").classList.add("nav-mode");
+      document.getElementById("nav-controls-btn").textContent = "▲ Show controls";
 
       updateNavVisualization(routeIndex, 0); // show full route as "remaining" immediately
 
@@ -1155,9 +1203,17 @@
       if (navRemainingLayer) { map.removeLayer(navRemainingLayer); navRemainingLayer = null; }
 
       document.getElementById("nav-panel").style.display = "none";
+      document.getElementById("app").classList.remove("nav-mode", "controls-open");
 
       // Restore the normal route lines
       if (currentRoutes.length > 0) drawRoutes(currentRoutes);
+    }
+
+    function toggleNavControls() {
+      const app = document.getElementById("app");
+      const btn = document.getElementById("nav-controls-btn");
+      const open = app.classList.toggle("controls-open");
+      btn.textContent = open ? "▼ Hide controls" : "▲ Show controls";
     }
 
   </script>
