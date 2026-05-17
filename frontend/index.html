@@ -549,6 +549,9 @@
     let navCompletedLayer = null;
     let navRemainingLayer = null;
 
+    // Last known heading — persists when device is stationary (heading becomes null)
+    let lastHeading = 0;
+
     // -------------------------------------------------------------------------
     // Map click handler — set origin or destination by clicking the map
     // -------------------------------------------------------------------------
@@ -587,6 +590,21 @@
     let myLocationMarker = null;
     let myLocationCircle = null;
 
+    // Creates a blue arrow marker rotated to face the direction of travel
+    function makeLocationArrow(lat, lon, heading) {
+      const icon = L.divIcon({
+        className: "",
+        html: `<svg width="28" height="28" viewBox="0 0 28 28"
+                 style="transform:rotate(${heading}deg);filter:drop-shadow(0 1px 3px rgba(0,0,0,0.35))">
+                 <polygon points="14,2 26,26 14,20 2,26"
+                   fill="#4a90d9" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+               </svg>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+      return L.marker([lat, lon], { icon });
+    }
+
     // Start watching the user's location as soon as the page loads
     if ("geolocation" in navigator) {
       navigator.geolocation.watchPosition(
@@ -594,22 +612,18 @@
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
           const accuracy = position.coords.accuracy;
+          const heading = position.coords.heading;
 
-          // Remove the old location marker if it exists
+          // Keep last heading when stationary (heading is null while not moving)
+          if (heading !== null && !isNaN(heading)) lastHeading = heading;
+
           if (myLocationMarker) map.removeLayer(myLocationMarker);
           if (myLocationCircle) map.removeLayer(myLocationCircle);
 
-          // Add a pulsing blue dot to show current location
-          myLocationMarker = L.circleMarker([lat, lon], {
-            radius: 8,
-            fillColor: "#4a90d9",
-            color: "white",
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.9,
-          }).addTo(map).bindPopup("You are here");
+          myLocationMarker = makeLocationArrow(lat, lon, lastHeading)
+            .addTo(map).bindPopup("You are here");
 
-          // Add a circle showing the accuracy radius
+          // Accuracy radius circle stays as before
           myLocationCircle = L.circle([lat, lon], {
             radius: accuracy,
             color: "#4a90d9",
