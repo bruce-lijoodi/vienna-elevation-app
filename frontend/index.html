@@ -136,6 +136,7 @@
     }
     .router-option {
       flex: 1;
+      min-width: 0;
       display: flex;
       align-items: center;
       gap: 6px;
@@ -145,6 +146,10 @@
       cursor: pointer;
       font-size: 0.82rem;
       transition: border-color 0.2s, background 0.2s;
+      overflow: hidden;
+    }
+    .router-option > div {
+      min-width: 0;
     }
     .router-option:has(input:checked) {
       border-color: #4a90d9;
@@ -411,15 +416,19 @@
         padding-top: 14px;
         padding-bottom: 14px;
       }
-    }
 
-    /* Extra-small phones (≤ 420px) */
-    @media (max-width: 420px) {
-      /* Stack router toggle vertically */
+      /* Stack router toggle vertically — side by side is too cramped on phones */
       .router-toggle {
         flex-direction: column;
       }
 
+      .router-option {
+        font-size: 0.85rem;
+      }
+    }
+
+    /* Extra-small phones (≤ 420px) */
+    @media (max-width: 420px) {
       /* Route card stats in a row to save vertical space */
       .route-card .stats {
         flex-direction: row;
