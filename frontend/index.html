@@ -129,6 +129,29 @@
       background: #f0f7ff;
     }
 
+    /* Routing engine toggle */
+    .router-toggle {
+      display: flex;
+      gap: 8px;
+    }
+    .router-option {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .router-option:has(input:checked) {
+      border-color: #4a90d9;
+      background: #f0f7ff;
+      font-weight: 600;
+    }
+
     /* The "Get Routes" button */
     #get-routes-btn {
       background: #1a1a2e;
@@ -318,6 +341,21 @@
         <input type="text" id="dest-input" placeholder="e.g. Grinzing, Vienna" />
         <div id="dest-suggestions" class="suggestions"></div>
         <button id="dest-loc-btn" class="location-btn" onclick="useMyLocation('destination')">📡 Use my current location</button>
+      </div>
+
+      <!-- Routing engine selector -->
+      <div class="input-group">
+        <label>⚙️ Routing Engine</label>
+        <div class="router-toggle">
+          <label class="router-option">
+            <input type="radio" name="router" value="local" checked>
+            <span>Local SRTM</span>
+          </label>
+          <label class="router-option">
+            <input type="radio" name="router" value="graphhopper">
+            <span>GraphHopper</span>
+          </label>
+        </div>
       </div>
 
       <!-- Get Routes button -->
@@ -710,7 +748,10 @@
         const response = await fetch(`${API_URL}/routes`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ origin_lat, origin_lon, dest_lat, dest_lon }),
+          body: JSON.stringify({
+            origin_lat, origin_lon, dest_lat, dest_lon,
+            router: document.querySelector('input[name="router"]:checked').value,
+          }),
         });
 
         if (!response.ok) {

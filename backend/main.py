@@ -21,15 +21,8 @@ import os                                    # Used for file path operations
 
 # Import our own modules
 from backend.graph_builder import build_graph
-
-# Switch routers via environment variable — no code change needed to revert
-USE_GRAPHHOPPER = os.getenv("USE_GRAPHHOPPER", "")
-if USE_GRAPHHOPPER:
-    from backend.router_gh import compute_routes
-    print("Router: GraphHopper API")
-else:
-    from backend.router import compute_routes
-    print("Router: local OSMnx/NetworkX")
+from backend.router import compute_routes as compute_routes_local
+from backend.router_gh import compute_routes as compute_routes_gh
 
 # ---------------------------------------------------------------------------
 # Create the FastAPI app
@@ -72,10 +65,6 @@ def load_graph():
     """
     global G
 
-    if USE_GRAPHHOPPER:
-        print("GraphHopper mode — skipping local graph load.")
-        return
-
     if os.path.exists(ENRICHED_GRAPH_PATH):
         print("Loading enriched graph from disk...")
         with open(ENRICHED_GRAPH_PATH, "rb") as f:
@@ -100,6 +89,7 @@ class RouteRequest(BaseModel):
     origin_lon: float   # Longitude of the starting point
     dest_lat: float     # Latitude of the destination
     dest_lon: float     # Longitude of the destination
+    router: str = "local"  # "local" (SRTM) or "graphhopper"
 
 
 class ElevationPoint(BaseModel):
@@ -155,8 +145,8 @@ def get_routes(req: RouteRequest):
     Expects a JSON body with origin and destination coordinates.
     Returns 3 routes sorted flattest → balanced → steepest.
     """
-    # In local mode, make sure the graph is loaded before we try to use it
-    if G is None and not USE_GRAPHHOPPER:
+    # Local router requires the graph to be loaded
+    if req.router != "graphhopper" and G is None:
         raise HTTPException(status_code=503, detail="Graph not loaded yet — please wait")
 
     # Make sure the coordinates are actually within Vienna's bounds
@@ -165,12 +155,9 @@ def get_routes(req: RouteRequest):
     if not (48.10 <= req.dest_lat <= 48.33 and 16.18 <= req.dest_lon <= 16.58):
         raise HTTPException(status_code=400, detail="Destination coordinates are outside Vienna")
 
-    # Calculate the 3 routes using our router module
-    routes = compute_routes(
-        G,
-        req.origin_lat, req.origin_lon,
-        req.dest_lat, req.dest_lon,
-    )
+    # Pick the router based on the request
+    fn = compute_routes_gh if req.router == "graphhopper" else compute_routes_local
+    routes = fn(G, req.origin_lat, req.origin_lon, req.dest_lat, req.dest_lon)
 
     if not routes:
         raise HTTPException(status_code=404, detail="No routes found between these points")
