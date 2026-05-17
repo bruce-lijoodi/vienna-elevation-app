@@ -316,6 +316,72 @@
     .nav-stat { display: flex; flex-direction: column; }
     .nav-stat span { font-size: 1.9rem; font-weight: bold; line-height: 1; }
     .nav-stat small { font-size: 0.72rem; opacity: 0.65; margin-top: 3px; }
+
+    /* -----------------------------------------------------------------------
+       Responsive — tablets and phones (≤ 768px)
+    ----------------------------------------------------------------------- */
+    @media (max-width: 768px) {
+      header {
+        padding: 10px 16px;
+        font-size: 1rem;
+        letter-spacing: 0.5px;
+      }
+
+      /* Stack map on top, sidebar below */
+      #app {
+        flex-direction: column;
+        height: calc(100vh - 44px);
+      }
+
+      /* Map takes the top 52% of the app area */
+      #map {
+        flex: 0 0 52%;
+        min-height: 220px;
+      }
+
+      /* Sidebar fills the rest and scrolls internally */
+      #sidebar {
+        width: 100%;
+        flex: 1;
+        min-height: 0;
+        padding: 14px 16px;
+        gap: 12px;
+        box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+      }
+
+      /* Shorter elevation chart to save space */
+      #elevation-chart {
+        height: 110px;
+      }
+
+      /* Compact nav panel numbers */
+      .nav-stat span {
+        font-size: 1.4rem;
+      }
+
+      .nav-stats {
+        gap: 20px;
+      }
+
+      #nav-panel {
+        padding: 12px 16px 16px;
+      }
+    }
+
+    /* Extra-small phones (≤ 420px) */
+    @media (max-width: 420px) {
+      /* Stack router toggle vertically */
+      .router-toggle {
+        flex-direction: column;
+      }
+
+      /* Route card stats in a row to save vertical space */
+      .route-card .stats {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+    }
   </style>
 </head>
 
