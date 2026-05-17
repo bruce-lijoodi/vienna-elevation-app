@@ -3,3 +3,4 @@ __pycache__/
 .env
 data/srtm.zip
 data/srtm_40_03.zip
+data/vienna_walk_graph.pkl
