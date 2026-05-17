@@ -133,6 +133,7 @@
     .router-toggle {
       display: flex;
       gap: 8px;
+      width: 100%;
     }
     .router-option {
       flex: 1;
@@ -146,10 +147,10 @@
       cursor: pointer;
       font-size: 0.82rem;
       transition: border-color 0.2s, background 0.2s;
-      overflow: hidden;
     }
     .router-option > div {
       min-width: 0;
+      overflow: hidden;
     }
     .router-option:has(input:checked) {
       border-color: #4a90d9;
@@ -423,7 +424,14 @@
       }
 
       .router-option {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
+      }
+
+      .router-option small {
+        font-size: 0.68rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
 
@@ -478,14 +486,14 @@
             <input type="radio" name="router" value="local" checked>
             <div>
               <div>OSMnx</div>
-              <small>SRTM · 90m resolution</small>
+              <small>SRTM · 90m</small>
             </div>
           </label>
           <label class="router-option">
             <input type="radio" name="router" value="graphhopper">
             <div>
               <div>GraphHopper</div>
-              <small>Mapterhorn · 30m resolution</small>
+              <small>Mapterhorn · 30m</small>
             </div>
           </label>
         </div>
@@ -680,7 +688,7 @@
 
           // Accuracy radius circle stays as before
           myLocationCircle = L.circle([lat, lon], {
-            radius: accuracy,
+            radius: Math.min(accuracy, 150),
             color: "#4a90d9",
             fillColor: "#4a90d9",
             fillOpacity: 0.1,
