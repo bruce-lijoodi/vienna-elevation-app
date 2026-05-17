@@ -151,6 +151,13 @@
       background: #f0f7ff;
       font-weight: 600;
     }
+    .router-option small {
+      display: block;
+      font-size: 0.72rem;
+      color: #888;
+      font-weight: 400;
+      margin-top: 1px;
+    }
 
     /* The "Get Routes" button */
     #get-routes-btn {
@@ -349,11 +356,17 @@
         <div class="router-toggle">
           <label class="router-option">
             <input type="radio" name="router" value="local" checked>
-            <span>Local SRTM</span>
+            <div>
+              <div>OSMnx</div>
+              <small>SRTM · 90m resolution</small>
+            </div>
           </label>
           <label class="router-option">
             <input type="radio" name="router" value="graphhopper">
-            <span>GraphHopper</span>
+            <div>
+              <div>GraphHopper</div>
+              <small>Mapterhorn · 30m resolution</small>
+            </div>
           </label>
         </div>
       </div>
