@@ -276,18 +276,43 @@
       color: #1a1a2e;
     }
 
-    /* Loop distance slider */
-    #loop-distance {
+    /* Take a Lap button */
+    #lap-btn {
+      background: white;
+      color: #1a1a2e;
+      border: 2px solid #1a1a2e;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
       width: 100%;
-      accent-color: #4a90d9;
     }
-    .slider-marks {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.72rem;
-      color: #aaa;
-      margin-top: 2px;
+    #lap-btn:hover { background: #f0f7ff; border-color: #4a90d9; color: #4a90d9; }
+    #lap-btn.active { background: #e8f0fe; border-color: #4a90d9; }
+
+    /* Distance chips revealed under the lap button */
+    #lap-chips {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
     }
+    .lap-chip {
+      flex: 1;
+      min-width: calc(33% - 8px);
+      padding: 8px 4px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      background: white;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      color: #1a1a2e;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .lap-chip:hover { background: #e8f0fe; border-color: #4a90d9; }
 
     /* Navigate button on each route card */
     .nav-btn {
@@ -489,43 +514,12 @@
         <button id="origin-loc-btn" class="location-btn" onclick="useMyLocation('origin')">📡 Use my current location</button>
       </div>
 
-      <!-- Route mode toggle -->
+      <!-- Destination input -->
       <div class="input-group">
-        <label>🔄 Route Mode</label>
-        <div class="router-toggle">
-          <label class="router-option">
-            <input type="radio" name="mode" value="point_to_point" checked onchange="onModeChange()">
-            <div>
-              <div>Point to Point</div>
-              <small>Origin → Destination</small>
-            </div>
-          </label>
-          <label class="router-option">
-            <input type="radio" name="mode" value="loop" onchange="onModeChange()">
-            <div>
-              <div>Loop</div>
-              <small>Circular route</small>
-            </div>
-          </label>
-        </div>
-      </div>
-
-      <!-- Destination input (hidden in loop mode) -->
-      <div id="dest-group" class="input-group">
         <label>🏁 Destination</label>
         <input type="text" id="dest-input" placeholder="e.g. Grinzing, Vienna" />
         <div id="dest-suggestions" class="suggestions"></div>
         <button id="dest-loc-btn" class="location-btn" onclick="useMyLocation('destination')">📡 Use my current location</button>
-      </div>
-
-      <!-- Loop distance slider (shown in loop mode) -->
-      <div id="loop-group" class="input-group" style="display:none;">
-        <label>📏 Loop Distance: <span id="loop-distance-val">5 km</span></label>
-        <input type="range" id="loop-distance" min="1" max="30" value="5" step="1"
-               oninput="document.getElementById('loop-distance-val').textContent = this.value + ' km'">
-        <div class="slider-marks">
-          <span>1 km</span><span>15 km</span><span>30 km</span>
-        </div>
       </div>
 
       <!-- Routing engine selector -->
@@ -551,6 +545,16 @@
 
       <!-- Get Routes button -->
       <button id="get-routes-btn" onclick="getRoutes()">Get Routes</button>
+
+      <!-- Take a Lap button + distance chips -->
+      <button id="lap-btn" onclick="takeLap()">🔁 Take a Lap</button>
+      <div id="lap-chips">
+        <button class="lap-chip" onclick="getLoopRoutes(2)">2 km</button>
+        <button class="lap-chip" onclick="getLoopRoutes(5)">5 km</button>
+        <button class="lap-chip" onclick="getLoopRoutes(10)">10 km</button>
+        <button class="lap-chip" onclick="getLoopRoutes(20)">20 km</button>
+        <button class="lap-chip" onclick="getLoopRoutes(30)">30 km</button>
+      </div>
 
       <!-- Instructions shown before any routes are loaded -->
       <p id="instructions">
@@ -912,15 +916,8 @@
     // Get Routes — called when the user clicks the "Get Routes" button
     // -------------------------------------------------------------------------
 
-    function onModeChange() {
-      const mode = document.querySelector('input[name="mode"]:checked').value;
-      document.getElementById("dest-group").style.display  = mode === "loop" ? "none" : "";
-      document.getElementById("loop-group").style.display  = mode === "loop" ? ""     : "none";
-    }
-
     async function getRoutes() {
-      const mode = document.querySelector('input[name="mode"]:checked').value;
-      let origin_lat, origin_lon, dest_lat = null, dest_lon = null;
+      let origin_lat, origin_lon, dest_lat, dest_lon;
 
       if (originCoords) {
         origin_lat = originCoords.lat;
@@ -935,36 +932,28 @@
         origin_lon = parseFloat(originVal[1]);
       }
 
-      if (mode === "point_to_point") {
-        if (destCoords) {
-          dest_lat = destCoords.lat;
-          dest_lon = destCoords.lon;
-        } else {
-          const destVal = document.getElementById("dest-input").value.split(",");
-          if (destVal.length < 2) {
-            alert("Please enter or search for a destination location.");
-            return;
-          }
-          dest_lat = parseFloat(destVal[0]);
-          dest_lon = parseFloat(destVal[1]);
+      if (destCoords) {
+        dest_lat = destCoords.lat;
+        dest_lon = destCoords.lon;
+      } else {
+        const destVal = document.getElementById("dest-input").value.split(",");
+        if (destVal.length < 2) {
+          alert("Please enter or search for a destination location.");
+          return;
         }
+        dest_lat = parseFloat(destVal[0]);
+        dest_lon = parseFloat(destVal[1]);
       }
 
-      const loop_distance_km = parseFloat(document.getElementById("loop-distance").value);
-
-      // Show the loading indicator while we wait for the API
       document.getElementById("loading").style.display = "block";
 
       try {
-        // Send the request to our FastAPI backend
         const response = await fetch(`${API_URL}/routes`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             origin_lat, origin_lon, dest_lat, dest_lon,
             router: document.querySelector('input[name="router"]:checked').value,
-            mode,
-            loop_distance_km,
           }),
         });
 
@@ -977,16 +966,74 @@
         const data = await response.json();
         currentRoutes = data.routes;
 
-        // Draw everything on the map and sidebar
         drawRoutes(currentRoutes);
         renderRouteCards(currentRoutes);
-        renderElevationChart(currentRoutes[0]); // Show flattest route chart by default
+        renderElevationChart(currentRoutes[0]);
 
       } catch (err) {
         alert("Could not connect to the backend. Make sure the server is running.");
         console.error(err);
       } finally {
-        // Always hide the loading indicator when done
+        document.getElementById("loading").style.display = "none";
+      }
+    }
+
+    function takeLap() {
+      const chips = document.getElementById("lap-chips");
+      const isOpen = chips.style.display === "flex";
+      chips.style.display = isOpen ? "none" : "flex";
+      document.getElementById("lap-btn").classList.toggle("active", !isOpen);
+    }
+
+    async function getLoopRoutes(km) {
+      let origin_lat, origin_lon;
+
+      if (originCoords) {
+        origin_lat = originCoords.lat;
+        origin_lon = originCoords.lon;
+      } else {
+        const originVal = document.getElementById("origin-input").value.split(",");
+        if (originVal.length < 2) {
+          alert("Please set an origin location first.");
+          return;
+        }
+        origin_lat = parseFloat(originVal[0]);
+        origin_lon = parseFloat(originVal[1]);
+      }
+
+      document.getElementById("lap-chips").style.display = "none";
+      document.getElementById("lap-btn").classList.remove("active");
+      document.getElementById("loading").style.display = "block";
+
+      try {
+        const response = await fetch(`${API_URL}/routes`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            origin_lat, origin_lon,
+            router: document.querySelector('input[name="router"]:checked').value,
+            mode: "loop",
+            loop_distance_km: km,
+          }),
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          alert("Error: " + err.detail);
+          return;
+        }
+
+        const data = await response.json();
+        currentRoutes = data.routes;
+
+        drawRoutes(currentRoutes);
+        renderRouteCards(currentRoutes);
+        renderElevationChart(currentRoutes[0]);
+
+      } catch (err) {
+        alert("Could not connect to the backend. Make sure the server is running.");
+        console.error(err);
+      } finally {
         document.getElementById("loading").style.display = "none";
       }
     }
