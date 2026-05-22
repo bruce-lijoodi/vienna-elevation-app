@@ -164,22 +164,71 @@ def _path_stats(G, path: list[int]) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Main function: compute all 3 routes
+# Circular route: loop from origin back to origin
+# ---------------------------------------------------------------------------
+
+def _compute_circular_routes(G, origin_lat: float, origin_lon: float, distance_m: float) -> list[dict]:
+    """
+    Generates 3 loop routes starting and ending at origin, each approximately
+    distance_m long. Uses 3 compass directions (0°, 120°, 240°) to find
+    different midpoints so the loops go through different terrain.
+    """
+    origin_node = nearest_node(G, origin_lat, origin_lon)
+    half = distance_m / 2
+
+    # Degree offsets for half the target distance at Vienna's latitude
+    dlat_per_m = 1 / 111000
+    dlon_per_m = 1 / (111000 * math.cos(math.radians(origin_lat)))
+
+    routes = []
+
+    for angle_deg in [0, 120, 240]:
+        angle_rad = math.radians(angle_deg)
+        mid_lat = origin_lat + half * dlat_per_m * math.cos(angle_rad)
+        mid_lon = origin_lon + half * dlon_per_m * math.sin(angle_rad)
+        mid_node = nearest_node(G, mid_lat, mid_lon)
+
+        if mid_node == origin_node:
+            continue
+
+        try:
+            path_out  = nx.shortest_path(G, source=origin_node, target=mid_node,  weight=PROFILES["balanced"])
+            path_back = nx.shortest_path(G, source=mid_node,    target=origin_node, weight=PROFILES["balanced"])
+            full_path = path_out + path_back[1:]  # avoid duplicate node at junction
+            stats = _path_stats(G, full_path)
+            routes.append(stats)
+        except nx.NetworkXNoPath:
+            print(f"  No circular path found for angle {angle_deg}°")
+
+    routes.sort(key=lambda r: r["elevation_gain_m"])
+    labels = ["flattest", "balanced", "steepest"]
+    for i, route in enumerate(routes[:3]):
+        route["profile"] = labels[i]
+
+    return routes[:3]
+
+
+# ---------------------------------------------------------------------------
+# Main function: compute all 3 routes (point-to-point or loop)
 # ---------------------------------------------------------------------------
 
 def compute_routes(
     G,
     origin_lat: float,
     origin_lon: float,
-    dest_lat: float,
-    dest_lon: float,
+    dest_lat: float = None,
+    dest_lon: float = None,
+    mode: str = "point_to_point",
+    loop_distance_km: float = 5.0,
 ) -> list[dict]:
     """
-    Calculates 3 routes (flattest, balanced, steepest) between two points.
-    
-    Returns a list of route dictionaries sorted by elevation gain (lowest first),
-    so the order is always: flattest → balanced → steepest.
+    Calculates 3 routes sorted flattest → balanced → steepest.
+    mode="point_to_point": routes between origin and destination.
+    mode="loop": circular routes starting and ending at origin.
     """
+    if mode == "loop":
+        return _compute_circular_routes(G, origin_lat, origin_lon, loop_distance_km * 1000)
+
     # Snap the user's coordinates to the nearest nodes in our graph
     origin_node = nearest_node(G, origin_lat, origin_lon)
     dest_node = nearest_node(G, dest_lat, dest_lon)
@@ -189,31 +238,22 @@ def compute_routes(
     # Run Dijkstra's algorithm once for each profile
     for profile_name, cost_fn in PROFILES.items():
         try:
-            # nx.shortest_path uses Dijkstra's under the hood
-            # The weight parameter tells it to use our custom cost function
             path = nx.shortest_path(
                 G,
                 source=origin_node,
                 target=dest_node,
                 weight=cost_fn,
             )
-
-            # Calculate stats for this path
             stats = _path_stats(G, path)
             routes.append({
                 "profile": profile_name,
                 "node_path": path,
-                **stats,  # Unpack all the stats into this dict
+                **stats,
             })
-
         except nx.NetworkXNoPath:
-            # If no path exists between the two nodes, skip this profile
             print(f"  No path found for profile: {profile_name}")
 
-    # Sort routes by elevation gain so they go flattest → steepest
     routes.sort(key=lambda r: r["elevation_gain_m"])
-
-    # Re-label them in order so names match actual ranking
     labels = ["flattest", "balanced", "steepest"]
     for i, route in enumerate(routes):
         route["profile"] = labels[i]

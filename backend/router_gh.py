@@ -83,18 +83,50 @@ def _gh_request(payload: dict) -> dict:
         return json.loads(resp.read())
 
 
-def compute_routes(G, origin_lat, origin_lon, dest_lat, dest_lon):
+def _circular_routes_gh(origin_lat, origin_lon, distance_m):
+    """
+    Uses GraphHopper's built-in round_trip algorithm to generate 3 loop routes.
+    Different seeds produce different route shapes through the terrain.
+    """
+    routes = []
+
+    for seed in [0, 42, 123]:
+        payload = {
+            "points": [[origin_lon, origin_lat]],
+            "profile": "foot",
+            "elevation": True,
+            "points_encoded": False,
+            "algorithm": "round_trip",
+            "round_trip.distance": distance_m,
+            "round_trip.seed": seed,
+        }
+        try:
+            data = _gh_request(payload)
+            if data.get("paths"):
+                routes.append(_parse_path(data["paths"][0]))
+        except Exception as e:
+            print(f"  GH round_trip error (seed={seed}): {e}")
+
+    routes.sort(key=lambda r: r["elevation_gain_m"])
+    labels = ["flattest", "balanced", "steepest"]
+    for i, route in enumerate(routes[:3]):
+        route["profile"] = labels[i]
+
+    return routes[:3]
+
+
+def compute_routes(G, origin_lat, origin_lon, dest_lat=None, dest_lon=None,
+                   mode="point_to_point", loop_distance_km=5.0):
     """
     GraphHopper implementation of compute_routes.
     G is accepted but not used — routing is handled by the GH API.
     Returns the same list-of-dicts format as router.py.
-
-    Uses GH's alternative_route algorithm to get up to 3 geographically
-    different paths in a single request, then sorts them by elevation gain
-    so the labelling (flattest / balanced / steepest) reflects actual terrain.
     """
     if not GH_KEY:
         raise RuntimeError("GH_API_KEY environment variable is not set.")
+
+    if mode == "loop":
+        return _circular_routes_gh(origin_lat, origin_lon, loop_distance_km * 1000)
 
     payload = {
         "points": [[origin_lon, origin_lat], [dest_lon, dest_lat]],
@@ -103,9 +135,7 @@ def compute_routes(G, origin_lat, origin_lon, dest_lat, dest_lon):
         "points_encoded": False,
         "algorithm": "alternative_route",
         "alternative_route.max_paths": 3,
-        # Allow alternatives up to twice the cost of the shortest path
         "alternative_route.max_weight_factor": 2.0,
-        # Allow alternatives that share up to 80% of the shortest path
         "alternative_route.max_share_factor": 0.8,
     }
 

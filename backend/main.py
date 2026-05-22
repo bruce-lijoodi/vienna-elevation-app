@@ -85,11 +85,13 @@ def load_graph():
 
 class RouteRequest(BaseModel):
     """The data we expect to receive when someone requests routes."""
-    origin_lat: float   # Latitude of the starting point
-    origin_lon: float   # Longitude of the starting point
-    dest_lat: float     # Latitude of the destination
-    dest_lon: float     # Longitude of the destination
-    router: str = "local"  # "local" (SRTM) or "graphhopper"
+    origin_lat: float
+    origin_lon: float
+    dest_lat: float | None = None
+    dest_lon: float | None = None
+    router: str = "local"           # "local" or "graphhopper"
+    mode: str = "point_to_point"    # "point_to_point" or "loop"
+    loop_distance_km: float = 5.0
 
 
 class ElevationPoint(BaseModel):
@@ -149,15 +151,25 @@ def get_routes(req: RouteRequest):
     if req.router != "graphhopper" and G is None:
         raise HTTPException(status_code=503, detail="Graph not loaded yet — please wait")
 
-    # Make sure the coordinates are actually within Vienna's bounds
+    # Validate origin is within Vienna
     if not (48.10 <= req.origin_lat <= 48.33 and 16.18 <= req.origin_lon <= 16.58):
         raise HTTPException(status_code=400, detail="Origin coordinates are outside Vienna")
-    if not (48.10 <= req.dest_lat <= 48.33 and 16.18 <= req.dest_lon <= 16.58):
-        raise HTTPException(status_code=400, detail="Destination coordinates are outside Vienna")
 
-    # Pick the router based on the request
+    # Point-to-point requires a destination
+    if req.mode == "point_to_point":
+        if req.dest_lat is None or req.dest_lon is None:
+            raise HTTPException(status_code=400, detail="Destination is required for point-to-point mode")
+        if not (48.10 <= req.dest_lat <= 48.33 and 16.18 <= req.dest_lon <= 16.58):
+            raise HTTPException(status_code=400, detail="Destination coordinates are outside Vienna")
+
     fn = compute_routes_gh if req.router == "graphhopper" else compute_routes_local
-    routes = fn(G, req.origin_lat, req.origin_lon, req.dest_lat, req.dest_lon)
+    routes = fn(
+        G,
+        req.origin_lat, req.origin_lon,
+        req.dest_lat, req.dest_lon,
+        mode=req.mode,
+        loop_distance_km=req.loop_distance_km,
+    )
 
     if not routes:
         raise HTTPException(status_code=404, detail="No routes found between these points")

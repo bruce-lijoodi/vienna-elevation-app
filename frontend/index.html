@@ -276,6 +276,19 @@
       color: #1a1a2e;
     }
 
+    /* Loop distance slider */
+    #loop-distance {
+      width: 100%;
+      accent-color: #4a90d9;
+    }
+    .slider-marks {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: #aaa;
+      margin-top: 2px;
+    }
+
     /* Navigate button on each route card */
     .nav-btn {
       margin-top: 10px;
@@ -476,12 +489,43 @@
         <button id="origin-loc-btn" class="location-btn" onclick="useMyLocation('origin')">📡 Use my current location</button>
       </div>
 
-      <!-- Destination input -->
+      <!-- Route mode toggle -->
       <div class="input-group">
+        <label>🔄 Route Mode</label>
+        <div class="router-toggle">
+          <label class="router-option">
+            <input type="radio" name="mode" value="point_to_point" checked onchange="onModeChange()">
+            <div>
+              <div>Point to Point</div>
+              <small>Origin → Destination</small>
+            </div>
+          </label>
+          <label class="router-option">
+            <input type="radio" name="mode" value="loop" onchange="onModeChange()">
+            <div>
+              <div>Loop</div>
+              <small>Circular route</small>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Destination input (hidden in loop mode) -->
+      <div id="dest-group" class="input-group">
         <label>🏁 Destination</label>
         <input type="text" id="dest-input" placeholder="e.g. Grinzing, Vienna" />
         <div id="dest-suggestions" class="suggestions"></div>
         <button id="dest-loc-btn" class="location-btn" onclick="useMyLocation('destination')">📡 Use my current location</button>
+      </div>
+
+      <!-- Loop distance slider (shown in loop mode) -->
+      <div id="loop-group" class="input-group" style="display:none;">
+        <label>📏 Loop Distance: <span id="loop-distance-val">5 km</span></label>
+        <input type="range" id="loop-distance" min="1" max="30" value="5" step="1"
+               oninput="document.getElementById('loop-distance-val').textContent = this.value + ' km'">
+        <div class="slider-marks">
+          <span>1 km</span><span>15 km</span><span>30 km</span>
+        </div>
       </div>
 
       <!-- Routing engine selector -->
@@ -868,16 +912,20 @@
     // Get Routes — called when the user clicks the "Get Routes" button
     // -------------------------------------------------------------------------
 
+    function onModeChange() {
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      document.getElementById("dest-group").style.display  = mode === "loop" ? "none" : "";
+      document.getElementById("loop-group").style.display  = mode === "loop" ? ""     : "none";
+    }
+
     async function getRoutes() {
-      // Use coordinates from address search or fall back to manual lat/lon input
-      let origin_lat, origin_lon, dest_lat, dest_lon;
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      let origin_lat, origin_lon, dest_lat = null, dest_lon = null;
 
       if (originCoords) {
-        // Use coordinates selected from address search
         origin_lat = originCoords.lat;
         origin_lon = originCoords.lon;
       } else {
-        // Fall back to manual coordinate input
         const originVal = document.getElementById("origin-input").value.split(",");
         if (originVal.length < 2) {
           alert("Please enter or search for an origin location.");
@@ -887,20 +935,22 @@
         origin_lon = parseFloat(originVal[1]);
       }
 
-      if (destCoords) {
-        // Use coordinates selected from address search
-        dest_lat = destCoords.lat;
-        dest_lon = destCoords.lon;
-      } else {
-        // Fall back to manual coordinate input
-        const destVal = document.getElementById("dest-input").value.split(",");
-        if (destVal.length < 2) {
-          alert("Please enter or search for a destination location.");
-          return;
+      if (mode === "point_to_point") {
+        if (destCoords) {
+          dest_lat = destCoords.lat;
+          dest_lon = destCoords.lon;
+        } else {
+          const destVal = document.getElementById("dest-input").value.split(",");
+          if (destVal.length < 2) {
+            alert("Please enter or search for a destination location.");
+            return;
+          }
+          dest_lat = parseFloat(destVal[0]);
+          dest_lon = parseFloat(destVal[1]);
         }
-        dest_lat = parseFloat(destVal[0]);
-        dest_lon = parseFloat(destVal[1]);
       }
+
+      const loop_distance_km = parseFloat(document.getElementById("loop-distance").value);
 
       // Show the loading indicator while we wait for the API
       document.getElementById("loading").style.display = "block";
@@ -913,6 +963,8 @@
           body: JSON.stringify({
             origin_lat, origin_lon, dest_lat, dest_lon,
             router: document.querySelector('input[name="router"]:checked').value,
+            mode,
+            loop_distance_km,
           }),
         });
 
