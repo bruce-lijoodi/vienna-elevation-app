@@ -556,6 +556,13 @@
         <button class="lap-chip" onclick="getLoopRoutes(30)">30 km</button>
       </div>
 
+      <!-- Experiment: custom elevation weight (local engine only) -->
+      <div class="input-group">
+        <label>🧪 Experiment: Custom Weight (local engine)</label>
+        <input type="number" id="custom-weight-input" value="5000" step="100" />
+        <button class="location-btn" onclick="testCustomWeight()">▶ Test This Weight</button>
+      </div>
+
       <!-- Instructions shown before any routes are loaded -->
       <p id="instructions">
         Enter coordinates above or click on the map to set your origin and destination.
@@ -619,6 +626,9 @@
       steepest: "#e91e63",  // Pink/Red
     };
 
+    // Colour for the experimental custom-weight route
+    const CUSTOM_WEIGHT_COLOR = "#9c27b0"; // Purple
+
     // -------------------------------------------------------------------------
     // Map setup
     // -------------------------------------------------------------------------
@@ -658,6 +668,9 @@
     let elevationChart = null;    // The Chart.js chart instance
     let clickMode = "origin";     // Whether the next map click sets origin or destination
     let currentRoutes = [];       // The routes returned by the API
+
+    // The experimental custom-weight route line on the map
+    let customWeightLayer = null;
 
     // Navigation state
     let isNavigating = false;
@@ -1029,6 +1042,86 @@
         drawRoutes(currentRoutes);
         renderRouteCards(currentRoutes);
         renderElevationChart(currentRoutes[0]);
+
+      } catch (err) {
+        alert("Could not connect to the backend. Make sure the server is running.");
+        console.error(err);
+      } finally {
+        document.getElementById("loading").style.display = "none";
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Experiment: test a custom elevation weight (local engine only)
+    // -------------------------------------------------------------------------
+
+    async function testCustomWeight() {
+      let origin_lat, origin_lon, dest_lat, dest_lon;
+
+      if (originCoords) {
+        origin_lat = originCoords.lat;
+        origin_lon = originCoords.lon;
+      } else {
+        const originVal = document.getElementById("origin-input").value.split(",");
+        if (originVal.length < 2) {
+          alert("Please set an origin location first.");
+          return;
+        }
+        origin_lat = parseFloat(originVal[0]);
+        origin_lon = parseFloat(originVal[1]);
+      }
+
+      if (destCoords) {
+        dest_lat = destCoords.lat;
+        dest_lon = destCoords.lon;
+      } else {
+        const destVal = document.getElementById("dest-input").value.split(",");
+        if (destVal.length < 2) {
+          alert("Please set a destination location first.");
+          return;
+        }
+        dest_lat = parseFloat(destVal[0]);
+        dest_lon = parseFloat(destVal[1]);
+      }
+
+      const weight = parseFloat(document.getElementById("custom-weight-input").value);
+      if (isNaN(weight)) {
+        alert("Please enter a numeric weight value.");
+        return;
+      }
+
+      document.getElementById("loading").style.display = "block";
+
+      try {
+        const response = await fetch(`${API_URL}/routes/custom-weight`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ origin_lat, origin_lon, dest_lat, dest_lon, weight }),
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          alert("Error: " + err.detail);
+          return;
+        }
+
+        const route = await response.json();
+
+        if (customWeightLayer) map.removeLayer(customWeightLayer);
+        const latLngs = route.coordinates.map(c => [c[1], c[0]]);
+        customWeightLayer = L.polyline(latLngs, {
+          color: CUSTOM_WEIGHT_COLOR,
+          weight: 5,
+          opacity: 0.9,
+          dashArray: "2 8",
+        }).addTo(map).bindPopup(`
+          <b>CUSTOM WEIGHT (${weight})</b><br>
+          Distance: ${(route.distance_m / 1000).toFixed(2)} km<br>
+          Elevation gain: ${route.elevation_gain_m} m ↑<br>
+          Elevation loss: ${route.elevation_loss_m} m ↓
+        `).openPopup();
+
+        map.fitBounds(customWeightLayer.getBounds(), { padding: [40, 40] });
 
       } catch (err) {
         alert("Could not connect to the backend. Make sure the server is running.");

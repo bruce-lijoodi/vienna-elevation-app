@@ -259,3 +259,39 @@ def compute_routes(
         route["profile"] = labels[i]
 
     return routes
+
+
+# ---------------------------------------------------------------------------
+# Experimental: single route with a custom elevation weight
+# ---------------------------------------------------------------------------
+
+def compute_custom_weight_route(
+    G,
+    origin_lat: float,
+    origin_lon: float,
+    dest_lat: float,
+    dest_lon: float,
+    weight: float,
+) -> dict:
+    """
+    Computes a single route using a custom elevation weight, so the
+    distance/elevation trade-off can be explored interactively from the UI.
+    cost(edge) = length + weight * uphill_gain
+    """
+    origin_node = nearest_node(G, origin_lat, origin_lon)
+    dest_node = nearest_node(G, dest_lat, dest_lon)
+
+    def cost(u, v, data):
+        if isinstance(data, dict) and 0 in data:
+            d = min(data.values(), key=lambda x: x.get("length", 1))
+        else:
+            d = data
+        length = d.get("length", 1)
+        grade = d.get("grade", 0)
+        uphill_gain = max(0, grade * length)
+        return max(1.0, length + weight * uphill_gain)
+
+    path = nx.shortest_path(G, source=origin_node, target=dest_node, weight=cost)
+    stats = _path_stats(G, path)
+    stats["profile"] = "custom"
+    return stats

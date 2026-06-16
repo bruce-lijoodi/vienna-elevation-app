@@ -21,7 +21,7 @@ import os                                    # Used for file path operations
 
 # Import our own modules
 from backend.graph_builder import build_graph
-from backend.router import compute_routes as compute_routes_local
+from backend.router import compute_routes as compute_routes_local, compute_custom_weight_route
 from backend.router_gh import compute_routes as compute_routes_gh
 
 # ---------------------------------------------------------------------------
@@ -115,6 +115,17 @@ class RouteResponse(BaseModel):
     routes: list[RouteResult]
 
 
+class CustomWeightRequest(BaseModel):
+    """A single route request using a custom elevation weight — lets us
+    experiment with the distance/elevation trade-off from the UI.
+    Local OSMnx engine only."""
+    origin_lat: float
+    origin_lon: float
+    dest_lat: float
+    dest_lon: float
+    weight: float = 5000.0
+
+
 # ---------------------------------------------------------------------------
 # API Endpoints
 # ---------------------------------------------------------------------------
@@ -175,3 +186,23 @@ def get_routes(req: RouteRequest):
         raise HTTPException(status_code=404, detail="No routes found between these points")
 
     return RouteResponse(routes=routes)
+
+
+@app.post("/routes/custom-weight", response_model=RouteResult)
+def get_custom_weight_route(req: CustomWeightRequest):
+    """
+    Experimental endpoint — computes one route using a custom elevation
+    weight instead of the 3 fixed profiles. Local OSMnx engine only.
+    """
+    if G is None:
+        raise HTTPException(status_code=503, detail="Graph not loaded yet — please wait")
+
+    if not (48.10 <= req.origin_lat <= 48.33 and 16.18 <= req.origin_lon <= 16.58):
+        raise HTTPException(status_code=400, detail="Origin coordinates are outside Vienna")
+    if not (48.10 <= req.dest_lat <= 48.33 and 16.18 <= req.dest_lon <= 16.58):
+        raise HTTPException(status_code=400, detail="Destination coordinates are outside Vienna")
+
+    result = compute_custom_weight_route(
+        G, req.origin_lat, req.origin_lon, req.dest_lat, req.dest_lon, req.weight
+    )
+    return RouteResult(**result)
