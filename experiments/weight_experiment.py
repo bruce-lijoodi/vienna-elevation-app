@@ -134,6 +134,43 @@ def save_charts(results, out_dir, suffix):
     print(f"Saved chart: {p2}")
 
 
+def save_comparison_chart(out_dir):
+    """Overlays the full sweep and the production-only run on one chart,
+    so it's obvious which points on the curve the live app actually uses."""
+    def load(path):
+        with open(path, newline="") as f:
+            return list(csv.DictReader(f))
+
+    full = load(os.path.join(out_dir, "weight_experiment_results.csv"))
+    prod = load(os.path.join(out_dir, "weight_experiment_results_production.csv"))
+
+    full_gains = [float(r["elevation_gain_m"]) for r in full]
+    full_dist = [float(r["distance_m"]) for r in full]
+    prod_gains = [float(r["elevation_gain_m"]) for r in prod]
+    prod_dist = [float(r["distance_m"]) for r in prod]
+
+    order = sorted(range(len(full)), key=lambda i: full_gains[i])
+
+    plt.figure(figsize=(7, 4.5))
+    plt.plot([full_gains[i] for i in order], [full_dist[i] for i in order],
+              marker="o", color="#aaaaaa", label="Full sweep (-20000 to +20000)")
+    plt.scatter(prod_gains, prod_dist, color="#e91e63", s=110, zorder=5,
+                label="Live app today (±5000, 0)")
+    for r in prod:
+        plt.annotate(r["weight"], (float(r["elevation_gain_m"]), float(r["distance_m"])),
+                     textcoords="offset points", xytext=(6, 6), fontsize=8, color="#e91e63")
+    plt.xlabel("Total elevation gain (m)")
+    plt.ylabel("Total distance (m)")
+    plt.title("Production vs. Full Sweep\nStephansdom -> Grinzing")
+    plt.legend()
+    plt.grid(alpha=0.3)
+    plt.tight_layout()
+    p = os.path.join(out_dir, "tradeoff_comparison.png")
+    plt.savefig(p, dpi=150)
+    plt.close()
+    print(f"Saved comparison chart: {p}")
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -141,12 +178,21 @@ def parse_args():
         help="Only test the 3 weights the live app actually uses today "
              "(-ELEVATION_GAIN_WEIGHT, 0, +ELEVATION_GAIN_WEIGHT) instead of the full sweep."
     )
+    parser.add_argument(
+        "--compare", action="store_true",
+        help="Skip routing entirely and just overlay the existing full-sweep and "
+             "production CSVs into one comparison chart (run both modes first)."
+    )
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
     out_dir = os.path.dirname(__file__)
+
+    if args.compare:
+        save_comparison_chart(out_dir)
+        sys.exit(0)
 
     if args.production:
         print(f"Mode: production only (weights actually used by the app today, ±{ELEVATION_GAIN_WEIGHT:.0f})\n")
