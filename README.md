@@ -12,6 +12,7 @@ An elevation-aware walking route planner for Vienna. Instead of just finding the
 
 - **3 route profiles** computed simultaneously using Dijkstra's algorithm with custom cost functions
 - **Elevation profile chart** for each route
+- **Contour lines** — toggleable terrain contours on the map
 - **Real-time navigation** — GPS tracking, remaining distance, ETA, speed, off-route detection
 - **Loop/circular routes** — "Take a Lap" button with 2/5/10/20/30 km options
 - **Two routing engines** — local OSMnx/SRTM or GraphHopper API (higher resolution)
@@ -57,7 +58,8 @@ backend/
   graph_builder.py  Downloads OSM street network and attaches SRTM elevation data
 
 frontend/
-  index.html        Single-file frontend (map, chart, navigation, UI)
+  index.html              Single-file frontend (map, chart, navigation, UI)
+  contours_wgs84.geojson  Terrain contour lines for Vienna
 
 experiments/
   weight_experiment.py   Weight sensitivity analysis script
