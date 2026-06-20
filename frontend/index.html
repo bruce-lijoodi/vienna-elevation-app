@@ -369,53 +369,144 @@
     .nav-stat span { font-size: 1.9rem; font-weight: bold; line-height: 1; }
     .nav-stat small { font-size: 0.72rem; opacity: 0.65; margin-top: 3px; }
 
-/* new changes */
     .pick-btn {
-  font-size: 0.78rem;
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  background: #f5f5f5;
-  cursor: pointer;
-  margin-top: 4px;
-  width: 100%;
-  transition: all 0.15s ease;
-}
+      font-size: 0.78rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background: #f5f5f5;
+      cursor: pointer;
+      margin-top: 4px;
+      width: 100%;
+      transition: all 0.15s ease;
+    }
 
-.pick-btn:hover {
-  background: #e8f4f5;
-  border-color: #4a9fa8;
-}
+    .pick-btn:hover {
+      background: #e8f4f5;
+      border-color: #4a9fa8;
+    }
 
-.pick-btn.active-pick {
-  background: #d0f0f4;
-  border-color: #0a8a96;
-  color: #0a5c63;
-  font-weight: 600;
-}
+    .pick-btn.active-pick {
+      background: #d0f0f4;
+      border-color: #0a8a96;
+      color: #0a5c63;
+      font-weight: 600;
+    }
 
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
 
-.card-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-}
+    .gpx-btn {
+      font-size: 0.78rem;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background: #f5f5f5;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
 
-.gpx-btn {
-  font-size: 0.78rem;
-  padding: 5px 12px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  background: #f5f5f5;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
+    .gpx-btn:hover {
+      background: #e8f4f5;
+      border-color: #4a9fa8;
+      color: #1a6b72;
+    }
 
-.gpx-btn:hover {
-  background: #e8f4f5;
-  border-color: #4a9fa8;
-  color: #1a6b72;
-}
+    /* Route style toggle */
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .control-group > label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+    }
+
+    .style-toggle-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .style-option {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 7px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .style-option input[type="radio"] { display: none; }
+
+    .style-option:has(input:checked) {
+      border-color: #4a90d9;
+      background: #f0f7ff;
+      font-weight: 600;
+    }
+
+    /* Custom weight experiment panel */
+    #custom-weight-panel {
+      background: #f5f0ff;
+      border: 1px solid #d0b0f0;
+      border-radius: 10px;
+      padding: 14px;
+      display: none;
+    }
+
+    #custom-weight-panel h2 {
+      font-size: 0.85rem;
+      color: #1a1a2e;
+      margin-bottom: 10px;
+    }
+
+    .custom-weight-inputs {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+
+    .custom-weight-inputs .pace-field { flex: 1; }
+
+    .custom-weight-run-btn {
+      background: #7b1fa2;
+      color: white;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      font-weight: 600;
+      height: 34px;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+
+    .custom-weight-run-btn:hover { background: #6a1b9a; }
+
+    #custom-weight-status {
+      font-size: 0.78rem;
+      color: #555;
+      margin-top: 8px;
+      min-height: 1.2em;
+    }
+
+    .custom-weight-hint {
+      font-size: 0.72rem;
+      color: #888;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
     /* -----------------------------------------------------------------------
        Responsive — tablets and phones (≤ 768px)
     ----------------------------------------------------------------------- */
@@ -618,7 +709,7 @@
 @media (max-width: 768px) {
   #weather-widget {
     top: auto;
-    bottom: 80px;  /* выше nav-panel */
+    bottom: 80px;  /* above nav-panel */
     right: 8px;
     max-width: 180px;
     font-size: 0.9em;
@@ -1198,6 +1289,20 @@
         <div class="calc-results" id="calc-results"></div>
       </div>
 
+      <!-- Custom Weight Experiment Panel -->
+      <div id="custom-weight-panel">
+        <h2>🔬 Weight Experiment</h2>
+        <div class="custom-weight-inputs">
+          <div class="pace-field">
+            <label class="pace-field" style="font-size:0.72rem;font-weight:600;color:#666;text-transform:uppercase">Elevation weight</label>
+            <input type="number" id="custom-weight-input" value="5000" step="100"
+              style="width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.88rem" />
+          </div>
+          <button class="custom-weight-run-btn" onclick="testCustomWeight()">Run</button>
+        </div>
+        <div id="custom-weight-status"></div>
+        <p class="custom-weight-hint">Positive = avoid hills · 0 = shortest · Negative = seek hills</p>
+      </div>
 
     </div>
 
@@ -1341,7 +1446,6 @@
     let destMarker = null;        // The destination pin on the map
     let routeLayers = [];         // The route lines drawn on the map
     let elevationChart = null;    // The Chart.js chart instance
-    // let clickMode = "origin";     // Whether the next map click sets origin or destination
     let currentRoutes = [];       // The routes returned by the API
 
     let expandedElevationChart = null;
@@ -1468,11 +1572,10 @@ function toggleContours() {
     // Map click handler — set origin or destination by clicking the map
     // -------------------------------------------------------------------------
 
-// По умолчанию карта НЕ слушает клики для точек
-let clickMode = null; // null = неактивен
+let clickMode = null; // null = inactive; map ignores clicks
 
 map.on("click", function (e) {
-  if (!clickMode) return; // игнорируем клик если режим не активирован
+  if (!clickMode) return;
 
   const lat = e.latlng.lat.toFixed(6);
   const lon = e.latlng.lng.toFixed(6);
@@ -1494,48 +1597,19 @@ map.on("click", function (e) {
     }).addTo(map).bindPopup("Destination").openPopup();
   }
 
-  // Сбрасываем режим после одного клика
   clickMode = null;
   setActiveBtn(null);
   map.getContainer().style.cursor = "";
 });
 
-fetch("/static/contours_wgs84.geojson")
-  .then(res => res.json())
-  .then(data => {
-    contourLayer = L.geoJSON(data, {
-      style: feature => ({
-        color: "#7b5e57",
-        weight: feature.properties.ELEV % 50 === 0 ? 1.6 : 0.8,
-        opacity: feature.properties.ELEV % 50 === 0 ? 0.75 : 0.45,
-      }),
-      onEachFeature: (feature, layer) => {
-        if (feature.properties?.ELEV % 50 === 0) {
-          layer.bindTooltip(`${feature.properties.ELEV} m`, {
-            permanent: false,
-            direction: "center",
-            className: "contour-label"
-          });
-        }
-      }
-    });
-
-    // не добавляем сразу, только через toggle
-  })
-  .catch(err => console.error("Contour load error:", err));
-
-
-
-// Функция подсветки активной кнопки
+// Highlight whichever "Pick" button is active
 function setActiveBtn(mode) {
   document.getElementById("btn-set-origin").classList.toggle("active-pick", mode === "origin");
   document.getElementById("btn-set-dest").classList.toggle("active-pick", mode === "destination");
 }
 
-// Кнопка "Pick Origin"
 document.getElementById("btn-set-origin").addEventListener("click", function () {
   if (clickMode === "origin") {
-    // повторное нажатие — отмена
     clickMode = null;
     setActiveBtn(null);
     map.getContainer().style.cursor = "";
@@ -1546,7 +1620,6 @@ document.getElementById("btn-set-origin").addEventListener("click", function () 
   }
 });
 
-// Кнопка "Pick Destination"
 document.getElementById("btn-set-dest").addEventListener("click", function () {
   if (clickMode === "destination") {
     clickMode = null;
@@ -1776,37 +1849,36 @@ document.getElementById("btn-set-dest").addEventListener("click", function () {
       }, 400);
     });
     // -------------------------------------------------------------------------
+    // Coordinate helpers — parse input field or use the stored geocoded value
+    // -------------------------------------------------------------------------
+
+    function getOriginCoords() {
+      if (originCoords) return originCoords;
+      const parts = document.getElementById("origin-input").value.split(",");
+      if (parts.length < 2) return null;
+      return { lat: parseFloat(parts[0]), lon: parseFloat(parts[1]) };
+    }
+
+    function getDestCoords() {
+      if (destCoords) return destCoords;
+      const parts = document.getElementById("dest-input").value.split(",");
+      if (parts.length < 2) return null;
+      return { lat: parseFloat(parts[0]), lon: parseFloat(parts[1]) };
+    }
+
+    // -------------------------------------------------------------------------
     // Get Routes — called when the user clicks the "Get Routes" button
     // -------------------------------------------------------------------------
 
     async function getRoutes() {
-      let origin_lat, origin_lon, dest_lat, dest_lon;
+      const origin = getOriginCoords();
+      const dest   = getDestCoords();
 
-      if (originCoords) {
-        origin_lat = originCoords.lat;
-        origin_lon = originCoords.lon;
-      } else {
-        const originVal = document.getElementById("origin-input").value.split(",");
-        if (originVal.length < 2) {
-          alert("Please enter or search for an origin location.");
-          return;
-        }
-        origin_lat = parseFloat(originVal[0]);
-        origin_lon = parseFloat(originVal[1]);
-      }
+      if (!origin) { alert("Please enter or search for an origin location."); return; }
+      if (!dest)   { alert("Please enter or search for a destination location."); return; }
 
-      if (destCoords) {
-        dest_lat = destCoords.lat;
-        dest_lon = destCoords.lon;
-      } else {
-        const destVal = document.getElementById("dest-input").value.split(",");
-        if (destVal.length < 2) {
-          alert("Please enter or search for a destination location.");
-          return;
-        }
-        dest_lat = parseFloat(destVal[0]);
-        dest_lon = parseFloat(destVal[1]);
-      }
+      const { lat: origin_lat, lon: origin_lon } = origin;
+      const { lat: dest_lat,   lon: dest_lon }   = dest;
 
       document.getElementById("loading").style.display = "block";
 
@@ -1850,20 +1922,9 @@ document.getElementById("btn-set-dest").addEventListener("click", function () {
     }
 
     async function getLoopRoutes(km) {
-      let origin_lat, origin_lon;
-
-      if (originCoords) {
-        origin_lat = originCoords.lat;
-        origin_lon = originCoords.lon;
-      } else {
-        const originVal = document.getElementById("origin-input").value.split(",");
-        if (originVal.length < 2) {
-          alert("Please set an origin location first.");
-          return;
-        }
-        origin_lat = parseFloat(originVal[0]);
-        origin_lon = parseFloat(originVal[1]);
-      }
+      const origin = getOriginCoords();
+      if (!origin) { alert("Please set an origin location first."); return; }
+      const { lat: origin_lat, lon: origin_lon } = origin;
 
       document.getElementById("lap-chips").style.display = "none";
       document.getElementById("lap-btn").classList.remove("active");
@@ -1955,7 +2016,6 @@ document.getElementById("btn-set-dest").addEventListener("click", function () {
     // Render route cards in the sidebar
     // -------------------------------------------------------------------------
 
-// GPX генератор
 function generateGPX(route, label) {
   const now = new Date().toISOString();
   const trkpts = route.coordinates.map((coord, i) => {
@@ -1976,7 +2036,6 @@ ${trkpts}
 </gpx>`;
 }
 
-// Скачать GPX файл
 function downloadGPX(routeIndex) {
   const route = currentRoutes[routeIndex];
   const label = route.profile.charAt(0).toUpperCase() + route.profile.slice(1);
@@ -1988,7 +2047,6 @@ function downloadGPX(routeIndex) {
   a.click();
 }
 
-// Обновлённый renderRouteCards
 function renderRouteCards(routes) {
   document.getElementById("instructions").style.display = "none";
   const container = document.getElementById("route-cards");
@@ -2017,7 +2075,7 @@ function renderRouteCards(routes) {
   });
 
   document.getElementById("pace-calculator").style.display = "block";
-
+  document.getElementById("custom-weight-panel").style.display = "block";
 }
     // -------------------------------------------------------------------------
     // Select a route — highlight it on the map and update the elevation chart
@@ -2087,6 +2145,60 @@ function renderRouteCards(routes) {
         }
       });
     }
+
+// -------------------------------------------------------------------------
+// Custom weight experiment — tests a single user-supplied elevation weight
+// -------------------------------------------------------------------------
+
+async function testCustomWeight() {
+  const origin = getOriginCoords();
+  const dest   = getDestCoords();
+
+  if (!origin) { alert("Please set an origin location first."); return; }
+  if (!dest)   { alert("Please set a destination location first."); return; }
+
+  const weight = parseFloat(document.getElementById("custom-weight-input").value);
+  if (isNaN(weight)) { alert("Enter a numeric weight value."); return; }
+
+  const statusEl = document.getElementById("custom-weight-status");
+  statusEl.textContent = "Computing…";
+
+  try {
+    const res = await fetch(`${API_URL}/routes/custom-weight`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        origin_lat: origin.lat,
+        origin_lon: origin.lon,
+        dest_lat:   dest.lat,
+        dest_lon:   dest.lon,
+        weight,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      statusEl.textContent = "Error: " + err.detail;
+      return;
+    }
+
+    const route = await res.json();
+    statusEl.textContent =
+      `weight ${weight} → ${(route.distance_m / 1000).toFixed(2)} km · ↑${route.elevation_gain_m} m · ↓${route.elevation_loss_m} m`;
+
+    routeLayers.forEach(l => map.removeLayer(l));
+    routeLayers = [];
+    const layer = L.polyline(
+      route.coordinates.map(c => [c[1], c[0]]),
+      { color: "#9c27b0", weight: 5, opacity: 0.9 }
+    ).addTo(map);
+    routeLayers.push(layer);
+    map.fitBounds(layer.getBounds(), { padding: [40, 40] });
+
+  } catch (err) {
+    statusEl.textContent = "Error: " + err.message;
+  }
+}
 
 // -------------------------------------------------------------------------
 // Navigation — turn-by-turn style tracking along a chosen route
@@ -2386,7 +2498,7 @@ function datestamp() {
 
 
     // -------------------------------------------------------------------------
-// Weather — Open-Meteo (бесплатно, без ключа)
+// Weather — Open-Meteo (free, no API key required)
 // -------------------------------------------------------------------------
 
 const WMO_ICONS = {
@@ -2701,11 +2813,6 @@ function azimuthToCardinal(deg) {
 // Update immediately and every minute
 updateSun();
 setInterval(updateSun, 60_000);
-if (window.innerWidth <= 768) {
-  document.body.classList.add("widgets-collapsed");
-  const btn = document.getElementById("weather-toggle-btn");
-  if (btn) btn.textContent = "☀️ Show widgets";
-}
 
 function toggleWeatherSun() {
   document.body.classList.toggle("widgets-collapsed");
@@ -2899,11 +3006,6 @@ function renderExpandedProfileStats(route) {
       <div class="profile-stat-value">${Math.round(s.avgDescentPerKm)} m/km</div>
     </div>
   `;
-
-  const btn = document.getElementById("contour-toggle");
-if (btn) {
-  btn.addEventListener("click", toggleContours);
-}
 
   const summary = document.getElementById("profile-summary");
   summary.innerHTML = `
