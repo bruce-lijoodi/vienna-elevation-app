@@ -508,6 +508,44 @@
       line-height: 1.4;
     }
     /* -----------------------------------------------------------------------
+       Inline input icons (origin / destination cue + location shortcut)
+       — hidden by default; revealed inside the mobile media query
+    ----------------------------------------------------------------------- */
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-icon {
+      display: none;
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.95rem;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .inline-loc-btn {
+      display: none;
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: #4a90d9;
+      font-size: 1.05rem;
+      padding: 6px 8px;
+      cursor: pointer;
+      border-radius: 4px;
+      z-index: 2;
+    }
+
+    .inline-loc-btn:hover { background: #f0f7ff; }
+    .inline-loc-btn:disabled { cursor: wait; opacity: 0.7; }
+
+    /* -----------------------------------------------------------------------
        Responsive — tablets and phones (≤ 768px)
     ----------------------------------------------------------------------- */
     @media (max-width: 768px) {
@@ -517,15 +555,16 @@
         letter-spacing: 0.5px;
       }
 
-      /* Stack map on top, sidebar below */
+      /* Stack map on top, sidebar below — column-reverse keeps the HTML
+         order intact while putting the map first visually on mobile */
       #app {
-        flex-direction: column;
+        flex-direction: column-reverse;
         height: calc(100vh - 44px);
       }
 
-      /* Map takes the top 52% of the app area */
+      /* Give the map most of the screen — controls below are compact */
       #map {
-        flex: 0 0 52%;
+        flex: 0 0 65%;
         min-height: 220px;
       }
 
@@ -538,6 +577,25 @@
         gap: 12px;
         box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
       }
+
+      /* Hide redundant chrome — header + inline icons carry the meaning */
+      #sidebar h2 { display: none; }
+      .input-group label { display: none; }
+      #instructions { display: none; }
+
+      /* Show the inline icon (🟢 / 🏁) and the inline 📡 button */
+      .input-icon { display: block; }
+      .inline-loc-btn { display: block; }
+
+      /* Make room inside the input for the icon and the button */
+      .input-wrapper input {
+        padding-left: 36px;
+        padding-right: 40px;
+      }
+
+      /* Hide the full-width "Use my current location" button on mobile —
+         the inline 📡 button replaces it */
+      .location-btn { display: none; }
 
       /* Shorter elevation chart to save space */
       #elevation-chart {
@@ -1190,7 +1248,11 @@
       <!-- Origin input -->
       <div class="input-group">
         <label>📍 Origin</label>
-        <input type="text" id="origin-input" placeholder="e.g. Stephansdom, Vienna" />
+        <div class="input-wrapper">
+          <span class="input-icon">🟢</span>
+          <input type="text" id="origin-input" placeholder="e.g. Stephansdom, Vienna" />
+          <button class="inline-loc-btn" onclick="useMyLocation('origin')" aria-label="Use my current location">📡</button>
+        </div>
         <div id="origin-suggestions" class="suggestions"></div>
         <button id="btn-set-origin" class="pick-btn">🖱️ Pick on map</button>
         <button id="origin-loc-btn" class="location-btn" onclick="useMyLocation('origin')">📡 Use my current location</button>
@@ -1200,7 +1262,11 @@
       <!-- Destination input -->
       <div class="input-group">
         <label>🏁 Destination</label>
-        <input type="text" id="dest-input" placeholder="e.g. Grinzing, Vienna" />
+        <div class="input-wrapper">
+          <span class="input-icon">🏁</span>
+          <input type="text" id="dest-input" placeholder="e.g. Grinzing, Vienna" />
+          <button class="inline-loc-btn" onclick="useMyLocation('destination')" aria-label="Use my current location">📡</button>
+        </div>
         <div id="dest-suggestions" class="suggestions"></div>
         <button id="btn-set-dest" class="pick-btn">🖱️ Pick on map</button>
         <button id="dest-loc-btn" class="location-btn" onclick="useMyLocation('destination')">📡 Use my current location</button>
@@ -1593,7 +1659,7 @@ map.on("click", function (e) {
     document.getElementById("dest-input").value = `${lat}, ${lon}`;
     if (destMarker) map.removeLayer(destMarker);
     destMarker = L.marker([lat, lon], {
-      icon: L.divIcon({ className: "", html: "🔴", iconSize: [24, 24] })
+      icon: L.divIcon({ className: "", html: "🏁", iconSize: [24, 24] })
     }).addTo(map).bindPopup("Destination").openPopup();
   }
 
@@ -1703,17 +1769,22 @@ document.getElementById("btn-set-dest").addEventListener("click", function () {
         return;
       }
 
-      // Find the button that was clicked and show a loading state
+      // Find both the full-width button (desktop) and the inline 📡 button
+      // (mobile) so the loading state shows on whichever one is visible
       const btnId = type === "origin" ? "origin-loc-btn" : "dest-loc-btn";
       const btn = document.getElementById(btnId);
+      const inputId = type === "origin" ? "origin-input" : "dest-input";
+      const inlineBtn = document.getElementById(inputId).parentElement.querySelector(".inline-loc-btn");
       const originalText = btn.textContent;
       btn.textContent = "📡 Getting location…";
       btn.disabled = true;
+      if (inlineBtn) { inlineBtn.textContent = "⏳"; inlineBtn.disabled = true; }
 
       navigator.geolocation.getCurrentPosition(
         position => {
           btn.textContent = originalText;
           btn.disabled = false;
+          if (inlineBtn) { inlineBtn.textContent = "📡"; inlineBtn.disabled = false; }
 
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
@@ -1730,7 +1801,7 @@ document.getElementById("btn-set-dest").addEventListener("click", function () {
             document.getElementById("dest-input").value = "My current location";
             if (destMarker) map.removeLayer(destMarker);
             destMarker = L.marker([lat, lon], {
-              icon: L.divIcon({ className: "", html: "🔴", iconSize: [24, 24] })
+              icon: L.divIcon({ className: "", html: "🏁", iconSize: [24, 24] })
             }).addTo(map).bindPopup("Destination — your location").openPopup();
           }
 
@@ -1739,6 +1810,7 @@ document.getElementById("btn-set-dest").addEventListener("click", function () {
         error => {
           btn.textContent = originalText;
           btn.disabled = false;
+          if (inlineBtn) { inlineBtn.textContent = "📡"; inlineBtn.disabled = false; }
 
           const messages = {
             1: "Location access was denied. Click the lock icon in your browser's address bar to allow it.",
@@ -1816,7 +1888,7 @@ document.getElementById("btn-set-dest").addEventListener("click", function () {
             } else {
               if (destMarker) map.removeLayer(destMarker);
               destMarker = L.marker([lat, lon], {
-                icon: L.divIcon({ className: "", html: "🔴", iconSize: [24, 24] })
+                icon: L.divIcon({ className: "", html: "🏁", iconSize: [24, 24] })
               }).addTo(map).bindPopup("Destination").openPopup();
             }
           };
