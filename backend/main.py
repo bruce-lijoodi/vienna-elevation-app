@@ -1,41 +1,77 @@
 """
 main.py
 
-This file is the web server for our application.
-It uses FastAPI to create a REST API that the frontend (map interface) will talk to.
-
-It exposes two endpoints:
-  GET  /health  — a simple check to confirm the server is running
-  POST /routes  — accepts origin + destination coordinates, returns 3 route options
-
-To run the server:
-  uvicorn backend.main:app --reload
+FastAPI web server for the Vienna Elevation Router.
+Exposes:
+  GET  /        — serves the frontend HTML
+  GET  /health  — liveness check
+  POST /routes  — returns 3 elevation-aware route options
 """
 
-from fastapi import FastAPI, HTTPException   # FastAPI is our web framework
-from fastapi.middleware.cors import CORSMiddleware  # Allows the frontend to talk to the backend
-from fastapi.responses import FileResponse   # Used to serve the frontend HTML file
-from pydantic import BaseModel               # Used to define and validate request/response data
-import pickle                                # Used to load our saved graph from disk
-import os                                    # Used for file path operations
+import logging
+import os
+import pickle
 
-# Import our own modules
+from fastapi.staticfiles import StaticFiles
+
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from pydantic import BaseModel, field_validator
+
 from backend.graph_builder import build_graph
-from backend.router import compute_routes as compute_routes_local
+from backend.router import compute_routes as compute_routes_local, compute_custom_weight_route
 from backend.router_gh import compute_routes as compute_routes_gh
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # ---------------------------------------------------------------------------
-# Create the FastAPI app
+# Config
 # ---------------------------------------------------------------------------
+
+DATA_DIR = os.path.join(os.path.dirname(__file__), "../data")
+ENRICHED_GRAPH_PATH = os.path.join(DATA_DIR, "vienna_walk_graph_enriched.pkl")
+FRONTEND_PATH = os.path.join(os.path.dirname(__file__), "../frontend/index.html")
+
+VIENNA_BOUNDS = {"lat": (48.10, 48.33), "lon": (16.18, 16.58)}
+
+G = None
+
+# ---------------------------------------------------------------------------
+# Lifespan (replaces deprecated @app.on_event("startup"))
+# FIX: on_event("startup") is deprecated since FastAPI 0.93 — use lifespan
+# ---------------------------------------------------------------------------
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global G
+    use_gh = os.getenv("USE_GRAPHHOPPER", "").strip() == "1"
+    if use_gh:
+        logger.info("GraphHopper mode — skipping local graph load.")
+    elif os.path.exists(ENRICHED_GRAPH_PATH):
+        logger.info("Loading enriched graph from disk...")
+        with open(ENRICHED_GRAPH_PATH, "rb") as f:
+            G = pickle.load(f)
+        logger.info(f"Graph loaded: {len(G.nodes):,} nodes, {len(G.edges):,} edges")
+    else:
+        logger.info("No cached graph found — building from scratch (may take a few minutes)...")
+        G = build_graph()
+    yield
+    # cleanup on shutdown (nothing needed here)
+
 
 app = FastAPI(
     title="Vienna Elevation Router",
     description="Returns 3 elevation-aware walking routes between two points in Vienna",
-    version="1.0",
+    version="1.1",
+    lifespan=lifespan,
 )
 
-# Allow requests from any origin (needed so our frontend HTML can call the API)
-# In a production app you would restrict this to your frontend's domain
+FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "../frontend")
+app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -44,92 +80,88 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
-# Load the graph when the server starts
+# Helpers
 # ---------------------------------------------------------------------------
 
-# Path to the enriched graph file we built with graph_builder.py
-DATA_DIR = os.path.join(os.path.dirname(__file__), "../data")
-ENRICHED_GRAPH_PATH = os.path.join(DATA_DIR, "vienna_walk_graph_enriched.pkl")
-
-# This variable will hold our graph in memory while the server is running
-G = None
-
-
-@app.on_event("startup")
-def load_graph():
-    """
-    This function runs automatically when the server starts.
-    It loads the pre-built graph from disk into memory so we can use it for routing.
-    If no graph exists yet, it builds one from scratch (takes a few minutes).
-    Skipped entirely when running in GraphHopper mode.
-    """
-    global G
-
-    if os.path.exists(ENRICHED_GRAPH_PATH):
-        print("Loading enriched graph from disk...")
-        with open(ENRICHED_GRAPH_PATH, "rb") as f:
-            G = pickle.load(f)
-        print(f"Graph loaded: {len(G.nodes):,} nodes, {len(G.edges):,} edges")
-    else:
-        print("No cached graph found — building from scratch...")
-        print("This will take a few minutes on first run.")
-        G = build_graph()
-
+def _in_vienna(lat: float, lon: float) -> bool:
+    return (VIENNA_BOUNDS["lat"][0] <= lat <= VIENNA_BOUNDS["lat"][1] and
+            VIENNA_BOUNDS["lon"][0] <= lon <= VIENNA_BOUNDS["lon"][1])
 
 # ---------------------------------------------------------------------------
-# Request and Response data models
-# ---------------------------------------------------------------------------
-# Pydantic models define the shape of data coming in and going out.
-# FastAPI uses these to automatically validate requests and document the API.
+# Pydantic models
 # ---------------------------------------------------------------------------
 
 class RouteRequest(BaseModel):
-    """The data we expect to receive when someone requests routes."""
-    origin_lat: float   # Latitude of the starting point
-    origin_lon: float   # Longitude of the starting point
-    dest_lat: float     # Latitude of the destination
-    dest_lon: float     # Longitude of the destination
-    router: str = "local"  # "local" (SRTM) or "graphhopper"
+    origin_lat: float
+    origin_lon: float
+    dest_lat: float | None = None
+    dest_lon: float | None = None
+    router: str = "local"       # "local" | "graphhopper"
+    mode: str = "point_to_point"  # "point_to_point" | "loop"
+    loop_distance_km: float = 5.0
+
+    # FIX: validate router and mode values so bad input fails fast with a clear message
+    @field_validator("router")
+    @classmethod
+    def validate_router(cls, v):
+        if v not in ("local", "graphhopper"):
+            raise ValueError("router must be 'local' or 'graphhopper'")
+        return v
+
+    @field_validator("mode")
+    @classmethod
+    def validate_mode(cls, v):
+        if v not in ("point_to_point", "loop"):
+            raise ValueError("mode must be 'point_to_point' or 'loop'")
+        return v
+
+    # FIX: clamp loop distance to a sane range
+    @field_validator("loop_distance_km")
+    @classmethod
+    def validate_loop_distance(cls, v):
+        if not (0.5 <= v <= 50.0):
+            raise ValueError("loop_distance_km must be between 0.5 and 50")
+        return v
 
 
 class ElevationPoint(BaseModel):
-    """A single point on the elevation profile chart."""
-    distance: float    # How far along the route we are (metres)
-    elevation: float   # Elevation at this point (metres above sea level)
+    distance: float
+    elevation: float
 
 
 class RouteResult(BaseModel):
-    """A single route with all its details."""
-    profile: str                          # "flattest", "balanced", or "steepest"
-    distance_m: float                     # Total route distance in metres
-    elevation_gain_m: float               # Total uphill climb in metres
-    elevation_loss_m: float               # Total downhill in metres
-    coordinates: list[list[float]]        # [[lon, lat], ...] for drawing on the map
-    elevation_profile: list[ElevationPoint]  # [{distance, elevation}, ...] for the chart
+    profile: str
+    distance_m: float
+    elevation_gain_m: float
+    elevation_loss_m: float
+    coordinates: list[list[float]]
+    elevation_profile: list[ElevationPoint]
 
 
 class RouteResponse(BaseModel):
-    """The full response containing all 3 routes."""
     routes: list[RouteResult]
 
 
-# ---------------------------------------------------------------------------
-# API Endpoints
-# ---------------------------------------------------------------------------
+class CustomWeightRequest(BaseModel):
+    origin_lat: float
+    origin_lon: float
+    dest_lat: float
+    dest_lon: float
+    weight: float = 5000.0
 
-FRONTEND_PATH = os.path.join(os.path.dirname(__file__), "../frontend/index.html")
+# ---------------------------------------------------------------------------
+# Endpoints
+# ---------------------------------------------------------------------------
 
 @app.get("/")
 def serve_frontend():
+    if not os.path.exists(FRONTEND_PATH):
+        raise HTTPException(status_code=404, detail="Frontend not found")
     return FileResponse(FRONTEND_PATH)
 
 
 @app.get("/health")
 def health():
-    """
-    Simple health check endpoint.
-    Visit http://localhost:8000/health to confirm the server is running.
-    """
     return {
         "status": "ok",
         "graph_loaded": G is not None,
@@ -139,27 +171,51 @@ def health():
 
 @app.post("/routes", response_model=RouteResponse)
 def get_routes(req: RouteRequest):
-    """
-    Main endpoint — calculates and returns 3 routes between two points.
+    use_gh = req.router == "graphhopper"
 
-    Expects a JSON body with origin and destination coordinates.
-    Returns 3 routes sorted flattest → balanced → steepest.
-    """
-    # Local router requires the graph to be loaded
-    if req.router != "graphhopper" and G is None:
+    if not use_gh and G is None:
         raise HTTPException(status_code=503, detail="Graph not loaded yet — please wait")
 
-    # Make sure the coordinates are actually within Vienna's bounds
-    if not (48.10 <= req.origin_lat <= 48.33 and 16.18 <= req.origin_lon <= 16.58):
+    if not _in_vienna(req.origin_lat, req.origin_lon):
         raise HTTPException(status_code=400, detail="Origin coordinates are outside Vienna")
-    if not (48.10 <= req.dest_lat <= 48.33 and 16.18 <= req.dest_lon <= 16.58):
-        raise HTTPException(status_code=400, detail="Destination coordinates are outside Vienna")
 
-    # Pick the router based on the request
-    fn = compute_routes_gh if req.router == "graphhopper" else compute_routes_local
-    routes = fn(G, req.origin_lat, req.origin_lon, req.dest_lat, req.dest_lon)
+    if req.mode == "point_to_point":
+        if req.dest_lat is None or req.dest_lon is None:
+            raise HTTPException(status_code=400, detail="Destination required for point_to_point mode")
+        if not _in_vienna(req.dest_lat, req.dest_lon):
+            raise HTTPException(status_code=400, detail="Destination coordinates are outside Vienna")
+
+    fn = compute_routes_gh if use_gh else compute_routes_local
+
+    try:
+        routes = fn(
+            G,
+            req.origin_lat, req.origin_lon,
+            req.dest_lat, req.dest_lon,
+            mode=req.mode,
+            loop_distance_km=req.loop_distance_km,
+        )
+    except RuntimeError as e:
+        # FIX: propagate GH config errors as 500 with a readable message
+        raise HTTPException(status_code=500, detail=str(e))
 
     if not routes:
         raise HTTPException(status_code=404, detail="No routes found between these points")
 
     return RouteResponse(routes=routes)
+
+
+@app.post("/routes/custom-weight", response_model=RouteResult)
+def get_custom_weight_route(req: CustomWeightRequest):
+    """Experimental: one route with a custom elevation weight. Local engine only."""
+    if G is None:
+        raise HTTPException(status_code=503, detail="Graph not loaded yet — please wait")
+    if not _in_vienna(req.origin_lat, req.origin_lon):
+        raise HTTPException(status_code=400, detail="Origin coordinates are outside Vienna")
+    if not _in_vienna(req.dest_lat, req.dest_lon):
+        raise HTTPException(status_code=400, detail="Destination coordinates are outside Vienna")
+
+    result = compute_custom_weight_route(
+        G, req.origin_lat, req.origin_lon, req.dest_lat, req.dest_lon, req.weight
+    )
+    return RouteResult(**result)
