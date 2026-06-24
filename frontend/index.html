@@ -2132,8 +2132,8 @@ function renderRouteCards(routes) {
   container.innerHTML = "";
 
   const emojis = { flattest: "🟢", balanced: "🟡", steepest: "🔴" };
-  // balanced defaults to min, others to km — all three support both via toggle
-  const defaultUnit = { flattest: "km", balanced: "min", steepest: "km" };
+  // all three default to min so the refine value matches the effort calculator
+  const defaultUnit = { flattest: "min", balanced: "min", steepest: "min" };
 
   routes.forEach((route, index) => {
     const unit      = defaultUnit[route.profile] ?? "km";
