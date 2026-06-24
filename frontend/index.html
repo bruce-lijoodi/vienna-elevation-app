@@ -563,6 +563,29 @@
       opacity: 0.5;
       cursor: not-allowed;
     }
+
+    .unit-toggle {
+      display: flex;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .unit-toggle button {
+      border: none;
+      background: none;
+      padding: 3px 7px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      color: #888;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .unit-toggle button.active {
+      background: #1a1a2e;
+      color: white;
+    }
     /* -----------------------------------------------------------------------
        Responsive — tablets and phones (≤ 768px)
     ----------------------------------------------------------------------- */
@@ -2109,21 +2132,24 @@ function renderRouteCards(routes) {
   container.innerHTML = "";
 
   const emojis = { flattest: "🟢", balanced: "🟡", steepest: "🔴" };
-  // balanced uses time (min), others use distance (km)
-  const refineUnit = { flattest: "km", balanced: "min", steepest: "km" };
+  // balanced defaults to min, others to km — all three support both via toggle
+  const defaultUnit = { flattest: "km", balanced: "min", steepest: "km" };
 
   routes.forEach((route, index) => {
-    const unit = refineUnit[route.profile] ?? "km";
+    const unit      = defaultUnit[route.profile] ?? "km";
+    const directKm  = (route.distance_m / 1000);
+    const pace      = parsePace(document.getElementById("pace-input")?.value || "6:00");
     const defaultVal = unit === "min"
-      ? Math.round(route.distance_m / 1000 * 6)   // 6 min/km default pace
-      : (route.distance_m / 1000).toFixed(1);
+      ? Math.round(directKm * pace)
+      : directKm.toFixed(1);
+    const defaultMin = defaultVal;
 
     const card = document.createElement("div");
     card.className = `route-card ${route.profile} ${index === 0 ? "active" : ""}`;
     card.innerHTML = `
       <h3>${emojis[route.profile]} ${route.profile}</h3>
       <div class="stats" id="card-stats-${index}">
-        <span>📏 Distance: ${(route.distance_m / 1000).toFixed(2)} km</span>
+        <span>📏 Distance: ${directKm.toFixed(2)} km</span>
         <span>⬆️ Gain: ${route.elevation_gain_m} m</span>
         <span>⬇️ Loss: ${route.elevation_loss_m} m</span>
       </div>
@@ -2134,10 +2160,16 @@ function renderRouteCards(routes) {
       <div class="card-refine" onclick="event.stopPropagation()">
         <span class="refine-label">Adjust:</span>
         <input type="number" class="refine-input" id="refine-${index}"
-          value="${defaultVal}" step="${unit === 'min' ? 5 : 0.5}" min="${defaultVal}">
-        <span class="refine-unit">${unit}</span>
+          value="${defaultVal}" step="${unit === 'min' ? 5 : 0.5}" min="${defaultMin}"
+          data-unit="${unit}" data-direct-km="${directKm.toFixed(2)}">
+        <div class="unit-toggle" id="unit-toggle-${index}">
+          <button class="${unit === 'km' ? 'active' : ''}" data-unit="km"
+            onclick="switchRefineUnit(${index})">km</button>
+          <button class="${unit === 'min' ? 'active' : ''}" data-unit="min"
+            onclick="switchRefineUnit(${index})">min</button>
+        </div>
         <button class="refine-btn" id="refine-btn-${index}"
-          onclick="adjustRoute(${index}, '${route.profile}', '${unit}')">↺ Refine</button>
+          onclick="adjustRoute(${index}, '${route.profile}')">↺ Refine</button>
       </div>
     `;
 
@@ -2170,15 +2202,49 @@ function renderRouteCards(routes) {
       renderElevationChart(currentRoutes[index]);
     }
     // -------------------------------------------------------------------------
+    // Unit toggle — switch a card's refine input between km and min
+    // -------------------------------------------------------------------------
+
+    function switchRefineUnit(index) {
+      const input    = document.getElementById(`refine-${index}`);
+      const oldUnit  = input.dataset.unit;
+      const newUnit  = oldUnit === "km" ? "min" : "km";
+      const pace     = parsePace(document.getElementById("pace-input")?.value || "6:00");
+      const directKm = parseFloat(input.dataset.directKm);
+      const current  = parseFloat(input.value);
+
+      let newVal, newMin, newStep;
+      if (newUnit === "min") {
+        newVal  = Math.round(current * pace);
+        newMin  = Math.round(directKm * pace);
+        newStep = 5;
+      } else {
+        newVal  = (current / pace).toFixed(1);
+        newMin  = directKm.toFixed(1);
+        newStep = 0.5;
+      }
+
+      input.value        = newVal;
+      input.min          = newMin;
+      input.step         = newStep;
+      input.dataset.unit = newUnit;
+
+      document.querySelectorAll(`#unit-toggle-${index} button`).forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.unit === newUnit);
+      });
+    }
+
+    // -------------------------------------------------------------------------
     // Adjust a single route card by target distance or time
     // -------------------------------------------------------------------------
 
-    async function adjustRoute(index, profile, unit) {
+    async function adjustRoute(index, profile) {
       const origin = getOriginCoords();
       const dest   = getDestCoords();
       if (!origin || !dest) { alert("Set origin and destination first."); return; }
 
       const input  = document.getElementById(`refine-${index}`);
+      const unit   = input.dataset.unit;
       const val    = parseFloat(input.value);
       const minVal = parseFloat(input.min);
       if (isNaN(val) || val <= 0) { alert("Enter a valid value."); return; }
@@ -2191,8 +2257,7 @@ function renderRouteCards(routes) {
       // Convert minutes → km using pace from the effort calculator (default 6:00 /km)
       let target_km;
       if (unit === "min") {
-        const paceStr = document.getElementById("pace-input")?.value || "6:00";
-        const paceMinPerKm = parsePace(paceStr);
+        const paceMinPerKm = parsePace(document.getElementById("pace-input")?.value || "6:00");
         target_km = val / paceMinPerKm;
       } else {
         target_km = val;
@@ -2230,10 +2295,11 @@ function renderRouteCards(routes) {
         `;
 
         // Update refine input to show what was actually achieved
+        const pace2    = parsePace(document.getElementById("pace-input")?.value || "6:00");
         const achieved = unit === "min"
-          ? Math.round(route.distance_m / 1000 * parsePace(document.getElementById("pace-input")?.value || "6:00"))
+          ? Math.round(route.distance_m / 1000 * pace2)
           : (route.distance_m / 1000).toFixed(1);
-        document.getElementById(`refine-${index}`).value = achieved;
+        input.value = achieved;
 
         // Replace just this route's polyline on the map
         if (routeLayers[index]) map.removeLayer(routeLayers[index]);
