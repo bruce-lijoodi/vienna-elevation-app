@@ -106,6 +106,81 @@ def _gh_request(payload: dict) -> dict:
         raise RuntimeError(f"GraphHopper connection failed: {e.reason}") from e
 
 
+def _perpendicular_waypoint(origin_lat, origin_lon, dest_lat, dest_lon, offset_km):
+    mid_lat = (origin_lat + dest_lat) / 2
+    mid_lon = (origin_lon + dest_lon) / 2
+    dlat = dest_lat - origin_lat
+    dlon = dest_lon - origin_lon
+    length = math.sqrt(dlat ** 2 + dlon ** 2)
+    if length == 0:
+        return mid_lat, mid_lon
+    perp_lat = -dlon / length
+    perp_lon =  dlat / length
+    lat_per_km = 1.0 / 111.0
+    lon_per_km = 1.0 / (111.0 * math.cos(math.radians(mid_lat)))
+    return (
+        mid_lat + perp_lat * offset_km * lat_per_km,
+        mid_lon + perp_lon * offset_km * lon_per_km,
+    )
+
+
+def _gh_route_points(points: list) -> dict | None:
+    """Route through an ordered list of [lon, lat] points via GH. Returns parsed dict or None."""
+    payload = {
+        "points": points,
+        "profile": "foot",
+        "elevation": True,
+        "points_encoded": False,
+    }
+    try:
+        data = _gh_request(payload)
+        paths = data.get("paths", [])
+        if paths:
+            return _parse_path(paths[0])
+    except Exception as e:
+        logger.warning(f"GH route error: {e}")
+    return None
+
+
+def compute_constrained_route(G, origin_lat, origin_lon, dest_lat, dest_lon,
+                               profile, target_km):
+    """GraphHopper version of constrained routing: A→B in approximately target_km.
+    G is accepted but unused — routing is handled by the GH API."""
+    direct = _gh_route_points([[origin_lon, origin_lat], [dest_lon, dest_lat]])
+    if direct is None:
+        raise ValueError("No path found between these points")
+
+    direct_km = direct["distance_m"] / 1000
+    if target_km <= direct_km * 1.1:
+        direct["profile"] = profile
+        return direct
+
+    lo, hi = 0.0, target_km * 0.8
+    best = direct
+
+    for _ in range(8):
+        offset = (lo + hi) / 2
+        wp_lat, wp_lon = _perpendicular_waypoint(
+            origin_lat, origin_lon, dest_lat, dest_lon, offset
+        )
+        route = _gh_route_points([
+            [origin_lon, origin_lat],
+            [wp_lon, wp_lat],
+            [dest_lon, dest_lat],
+        ])
+        if route is None:
+            hi = offset
+            continue
+        best = route
+        if route["distance_m"] / 1000 < target_km:
+            lo = offset
+        else:
+            hi = offset
+
+    best["profile"] = profile
+    return best
+
+
 def _circular_routes_gh(origin_lat, origin_lon, distance_m):
     """
     Uses GraphHopper's built-in round_trip algorithm to generate up to 3 loop routes.

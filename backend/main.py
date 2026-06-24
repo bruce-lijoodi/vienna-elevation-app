@@ -26,7 +26,10 @@ from backend.router import (
     compute_custom_weight_route,
     compute_constrained_route,
 )
-from backend.router_gh import compute_routes as compute_routes_gh
+from backend.router_gh import (
+    compute_routes as compute_routes_gh,
+    compute_constrained_route as compute_constrained_route_gh,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -255,14 +258,14 @@ def get_custom_weight_route(req: CustomWeightRequest):
 @app.post("/routes/constrained", response_model=RouteResult)
 def get_constrained_route(req: ConstrainedRouteRequest):
     """Adjust a route's distance while keeping its elevation profile (flattest/balanced/steepest)."""
-    if G is None:
-        raise HTTPException(status_code=503, detail="Graph not loaded yet — please wait")
-    if not _in_vienna(req.origin_lat, req.origin_lon):
-        raise HTTPException(status_code=400, detail="Origin coordinates are outside Vienna")
-    if not _in_vienna(req.dest_lat, req.dest_lon):
-        raise HTTPException(status_code=400, detail="Destination coordinates are outside Vienna")
+    constrained_fn = compute_constrained_route_gh if G is None else compute_constrained_route
+    if G is not None:
+        if not _in_vienna(req.origin_lat, req.origin_lon):
+            raise HTTPException(status_code=400, detail="Origin coordinates are outside Vienna")
+        if not _in_vienna(req.dest_lat, req.dest_lon):
+            raise HTTPException(status_code=400, detail="Destination coordinates are outside Vienna")
     try:
-        result = compute_constrained_route(
+        result = constrained_fn(
             G,
             req.origin_lat, req.origin_lon,
             req.dest_lat,   req.dest_lon,
