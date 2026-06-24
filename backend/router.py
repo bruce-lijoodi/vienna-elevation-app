@@ -230,6 +230,99 @@ def compute_routes(
     return routes
 
 
+def _perpendicular_waypoint(
+    origin_lat: float, origin_lon: float,
+    dest_lat: float,   dest_lon: float,
+    offset_km: float,
+) -> tuple[float, float]:
+    """Return a point offset perpendicularly from the midpoint of A→B by offset_km."""
+    mid_lat = (origin_lat + dest_lat) / 2
+    mid_lon = (origin_lon + dest_lon) / 2
+
+    dlat = dest_lat - origin_lat
+    dlon = dest_lon - origin_lon
+    length = math.sqrt(dlat ** 2 + dlon ** 2)
+    if length == 0:
+        return mid_lat, mid_lon
+
+    # Rotate 90° to get perpendicular unit vector
+    perp_lat = -dlon / length
+    perp_lon =  dlat / length
+
+    lat_per_km = 1.0 / 111.0
+    lon_per_km = 1.0 / (111.0 * math.cos(math.radians(mid_lat)))
+
+    return (
+        mid_lat + perp_lat * offset_km * lat_per_km,
+        mid_lon + perp_lon * offset_km * lon_per_km,
+    )
+
+
+def compute_constrained_route(
+    G,
+    origin_lat: float,
+    origin_lon: float,
+    dest_lat: float,
+    dest_lon: float,
+    profile: str,
+    target_km: float,
+) -> dict:
+    """Route from A to B of approximately target_km using the given elevation profile.
+
+    If target_km is longer than the direct route, inserts a perpendicular detour
+    waypoint and binary-searches the offset until the path length ≈ target_km.
+    """
+    cost_fn = PROFILES[profile]
+    origin_node = nearest_node(G, origin_lat, origin_lon)
+    dest_node   = nearest_node(G, dest_lat,   dest_lon)
+
+    def _route_via(wp_lat, wp_lon):
+        wp_node = nearest_node(G, wp_lat, wp_lon)
+        if wp_node in (origin_node, dest_node):
+            return None
+        try:
+            p1 = nx.shortest_path(G, source=origin_node, target=wp_node, weight=cost_fn)
+            p2 = nx.shortest_path(G, source=wp_node,     target=dest_node, weight=cost_fn)
+            return p1 + p2[1:]
+        except nx.NetworkXNoPath:
+            return None
+
+    try:
+        direct_path = nx.shortest_path(G, source=origin_node, target=dest_node, weight=cost_fn)
+    except nx.NetworkXNoPath:
+        raise ValueError("No path found between these points")
+
+    direct_stats = _path_stats(G, direct_path)
+    direct_km    = direct_stats["distance_m"] / 1000
+
+    if target_km <= direct_km * 1.1:
+        direct_stats["profile"] = profile
+        return direct_stats
+
+    # Binary search the perpendicular offset (8 iterations ≈ 1% accuracy)
+    lo, hi = 0.0, target_km * 0.8
+    best = direct_stats
+
+    for _ in range(8):
+        offset = (lo + hi) / 2
+        wp_lat, wp_lon = _perpendicular_waypoint(
+            origin_lat, origin_lon, dest_lat, dest_lon, offset
+        )
+        path = _route_via(wp_lat, wp_lon)
+        if path is None:
+            hi = offset
+            continue
+        stats = _path_stats(G, path)
+        best  = stats
+        if stats["distance_m"] / 1000 < target_km:
+            lo = offset
+        else:
+            hi = offset
+
+    best["profile"] = profile
+    return best
+
+
 def compute_custom_weight_route(
     G,
     origin_lat: float,

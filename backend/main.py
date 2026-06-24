@@ -21,7 +21,11 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator
 
 from backend.graph_builder import build_graph
-from backend.router import compute_routes as compute_routes_local, compute_custom_weight_route
+from backend.router import (
+    compute_routes as compute_routes_local,
+    compute_custom_weight_route,
+    compute_constrained_route,
+)
 from backend.router_gh import compute_routes as compute_routes_gh
 
 logging.basicConfig(level=logging.INFO)
@@ -149,6 +153,29 @@ class CustomWeightRequest(BaseModel):
     dest_lon: float
     weight: float = 5000.0
 
+
+class ConstrainedRouteRequest(BaseModel):
+    origin_lat: float
+    origin_lon: float
+    dest_lat: float
+    dest_lon: float
+    profile: str = "balanced"
+    target_km: float
+
+    @field_validator("profile")
+    @classmethod
+    def validate_profile(cls, v):
+        if v not in ("flattest", "balanced", "steepest"):
+            raise ValueError("profile must be flattest, balanced, or steepest")
+        return v
+
+    @field_validator("target_km")
+    @classmethod
+    def validate_target(cls, v):
+        if not (0.1 <= v <= 50.0):
+            raise ValueError("target_km must be between 0.1 and 50")
+        return v
+
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
@@ -218,4 +245,25 @@ def get_custom_weight_route(req: CustomWeightRequest):
     result = compute_custom_weight_route(
         G, req.origin_lat, req.origin_lon, req.dest_lat, req.dest_lon, req.weight
     )
+    return RouteResult(**result)
+
+
+@app.post("/routes/constrained", response_model=RouteResult)
+def get_constrained_route(req: ConstrainedRouteRequest):
+    """Adjust a route's distance while keeping its elevation profile (flattest/balanced/steepest)."""
+    if G is None:
+        raise HTTPException(status_code=503, detail="Graph not loaded yet — please wait")
+    if not _in_vienna(req.origin_lat, req.origin_lon):
+        raise HTTPException(status_code=400, detail="Origin coordinates are outside Vienna")
+    if not _in_vienna(req.dest_lat, req.dest_lon):
+        raise HTTPException(status_code=400, detail="Destination coordinates are outside Vienna")
+    try:
+        result = compute_constrained_route(
+            G,
+            req.origin_lat, req.origin_lon,
+            req.dest_lat,   req.dest_lon,
+            req.profile,    req.target_km,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     return RouteResult(**result)
