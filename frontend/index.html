@@ -2134,7 +2134,7 @@ function renderRouteCards(routes) {
       <div class="card-refine" onclick="event.stopPropagation()">
         <span class="refine-label">Adjust:</span>
         <input type="number" class="refine-input" id="refine-${index}"
-          value="${defaultVal}" step="${unit === 'min' ? 5 : 0.5}" min="${unit === 'min' ? 5 : 0.5}">
+          value="${defaultVal}" step="${unit === 'min' ? 5 : 0.5}" min="${defaultVal}">
         <span class="refine-unit">${unit}</span>
         <button class="refine-btn" id="refine-btn-${index}"
           onclick="adjustRoute(${index}, '${route.profile}', '${unit}')">↺ Refine</button>
@@ -2178,8 +2178,15 @@ function renderRouteCards(routes) {
       const dest   = getDestCoords();
       if (!origin || !dest) { alert("Set origin and destination first."); return; }
 
-      const val = parseFloat(document.getElementById(`refine-${index}`).value);
+      const input  = document.getElementById(`refine-${index}`);
+      const val    = parseFloat(input.value);
+      const minVal = parseFloat(input.min);
       if (isNaN(val) || val <= 0) { alert("Enter a valid value."); return; }
+      if (val < minVal) {
+        alert(`The minimum for this route is ${minVal} ${unit} — you can't go below the direct path.`);
+        input.value = minVal;
+        return;
+      }
 
       // Convert minutes → km using pace from the effort calculator (default 6:00 /km)
       let target_km;
