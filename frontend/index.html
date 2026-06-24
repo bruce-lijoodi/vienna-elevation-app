@@ -2135,6 +2135,7 @@ function renderRouteCards(routes) {
 
   const emojis = { flattest: "🟢", balanced: "🟡", steepest: "🔴" };
   routes.forEach((route, index) => {
+    const unit       = "min";
     const directKm   = route.distance_m / 1000;
     const pace       = parsePace(document.getElementById("pace-input")?.value || "6:00");
     const estMin     = Math.round(directKm * pace);
