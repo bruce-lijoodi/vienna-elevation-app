@@ -1,6 +1,15 @@
 __pycache__/
 *.pyc
 .env
+
+# Large local data files — not needed for Vercel (GraphHopper mode)
 data/srtm.zip
 data/srtm_40_03.zip
 data/vienna_walk_graph.pkl
+data/vienna_walk_graph_enriched.pkl
+data/srtm/
+vienna_walk_graph.pkl
+vienna_walk_graph_enriched.pkl
+srtm/
+srtm.zip
+srtm_40_03.zip

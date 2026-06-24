@@ -1,0 +1,13 @@
+data/
+srtm/
+srtm.zip
+srtm_40_03.zip
+*.pkl
+*.tif
+*.tfw
+*.hdr
+experiments/
+*.docx
+__pycache__/
+*.pyc
+.env

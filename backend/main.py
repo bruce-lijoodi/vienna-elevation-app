@@ -60,8 +60,12 @@ async def lifespan(app: FastAPI):
             G = pickle.load(f)
         logger.info(f"Graph loaded: {len(G.nodes):,} nodes, {len(G.edges):,} edges")
     else:
-        logger.info("No cached graph found — building from scratch (may take a few minutes)...")
-        G = build_graph()
+        data_dir = os.path.dirname(ENRICHED_GRAPH_PATH)
+        if not os.path.isdir(data_dir):
+            logger.warning("No data directory found — local routing unavailable. Set USE_GRAPHHOPPER=1 to use GraphHopper instead.")
+        else:
+            logger.info("No cached graph found — building from scratch (may take a few minutes)...")
+            G = build_graph()
     yield
     # cleanup on shutdown (nothing needed here)
 

@@ -1973,8 +1973,9 @@ document.getElementById("btn-set-dest").addEventListener("click", function () {
         });
 
         if (!response.ok) {
-          const err = await response.json();
-          alert("Error: " + err.detail);
+          let msg = `HTTP ${response.status} ${response.statusText}`;
+          try { const e = await response.json(); msg = e.detail || JSON.stringify(e); } catch {}
+          alert("Error: " + msg);
           return;
         }
 
@@ -2024,8 +2025,9 @@ document.getElementById("btn-set-dest").addEventListener("click", function () {
         });
 
         if (!response.ok) {
-          const err = await response.json();
-          alert("Error: " + err.detail);
+          let msg = `HTTP ${response.status} ${response.statusText}`;
+          try { const e = await response.json(); msg = e.detail || JSON.stringify(e); } catch {}
+          alert("Error: " + msg);
           return;
         }
 

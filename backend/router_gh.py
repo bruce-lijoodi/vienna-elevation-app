@@ -22,8 +22,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 GH_URL = "https://graphhopper.com/api/1/route"
-# FIX: don't hardcode API key as fallback — fail loudly instead
-GH_KEY = os.getenv("GH_API_KEY", "4249d1f0-5aca-4ad2-9fd6-8f126b348ef4")
+GH_KEY = os.getenv("GH_API_KEY")  # set in Railway Variables dashboard, never commit
 
 
 def _haversine(lat1, lon1, lat2, lon2):
