@@ -2132,17 +2132,12 @@ function renderRouteCards(routes) {
   container.innerHTML = "";
 
   const emojis = { flattest: "🟢", balanced: "🟡", steepest: "🔴" };
-  // all three default to min so the refine value matches the effort calculator
-  const defaultUnit = { flattest: "min", balanced: "min", steepest: "min" };
-
   routes.forEach((route, index) => {
-    const unit      = defaultUnit[route.profile] ?? "km";
-    const directKm  = (route.distance_m / 1000);
-    const pace      = parsePace(document.getElementById("pace-input")?.value || "6:00");
-    const defaultVal = unit === "min"
-      ? Math.round(directKm * pace)
-      : directKm.toFixed(1);
-    const defaultMin = defaultVal;
+    const directKm   = route.distance_m / 1000;
+    const pace       = parsePace(document.getElementById("pace-input")?.value || "6:00");
+    const estMin     = Math.round(directKm * pace);
+    const defaultVal = estMin;
+    const defaultMin = estMin;
 
     const card = document.createElement("div");
     card.className = `route-card ${route.profile} ${index === 0 ? "active" : ""}`;
@@ -2150,6 +2145,7 @@ function renderRouteCards(routes) {
       <h3>${emojis[route.profile]} ${route.profile}</h3>
       <div class="stats" id="card-stats-${index}">
         <span>📏 Distance: ${directKm.toFixed(2)} km</span>
+        <span>⏱ Est. time: ${estMin} min</span>
         <span>⬆️ Gain: ${route.elevation_gain_m} m</span>
         <span>⬇️ Loss: ${route.elevation_loss_m} m</span>
       </div>
@@ -2288,8 +2284,11 @@ function renderRouteCards(routes) {
         currentRoutes[index] = route;
 
         // Update just this card's stats
+        const pace3   = parsePace(document.getElementById("pace-input")?.value || "6:00");
+        const newMin2 = Math.round(route.distance_m / 1000 * pace3);
         document.getElementById(`card-stats-${index}`).innerHTML = `
           <span>📏 Distance: ${(route.distance_m / 1000).toFixed(2)} km</span>
+          <span>⏱ Est. time: ${newMin2} min</span>
           <span>⬆️ Gain: ${route.elevation_gain_m} m</span>
           <span>⬇️ Loss: ${route.elevation_loss_m} m</span>
         `;
