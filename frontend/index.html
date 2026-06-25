@@ -2289,49 +2289,56 @@ function renderRouteCards(routes) {
     // Render the elevation profile chart using Chart.js
     // -------------------------------------------------------------------------
 
-    function renderElevationChart(route) {
-      // Show the chart container
-      document.getElementById("chart-container").style.display = "block";
+function renderElevationChart(route) {
+  document.getElementById("chart-container").style.display = "block";
 
-      // Extract data for the chart axes
-      const labels = route.elevation_profile.map(p => (p.distance / 1000).toFixed(2));
-      const elevations = route.elevation_profile.map(p => p.elevation);
+  // {x, y} формат для linear scale
+  const chartData = route.elevation_profile.map(p => ({
+    x: parseFloat((p.distance / 1000).toFixed(3)),
+    y: p.elevation
+  }));
 
-      // Destroy the previous chart instance if one exists
-      if (elevationChart) elevationChart.destroy();
+  const totalKm = chartData[chartData.length - 1]?.x ?? 0;
+  const stepSize = totalKm <= 3 ? 0.5 : 1.0;  // до 3км — каждые 500м, дальше — 1км
 
-      const ctx = document.getElementById("elevation-chart").getContext("2d");
-      elevationChart = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: labels,
-          datasets: [{
-            label: "Elevation (m)",
-            data: elevations,
-            borderColor: PROFILE_COLORS[route.profile],
-            backgroundColor: PROFILE_COLORS[route.profile] + "33", // 20% opacity fill
-            borderWidth: 2,
-            pointRadius: 0,  // Hide individual data points for a cleaner look
-            fill: true,
-            tension: 0.3,    // Slight curve to the line
-          }]
+  if (elevationChart) elevationChart.destroy();
+
+  const ctx = document.getElementById("elevation-chart").getContext("2d");
+  elevationChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      datasets: [{
+        label: "Elevation (m)",
+        data: chartData,           // ← {x, y} объекты, NO labels
+        borderColor: PROFILE_COLORS[route.profile],
+        backgroundColor: PROFILE_COLORS[route.profile] + "33",
+        borderWidth: 2,
+        pointRadius: 0,
+        fill: true,
+        tension: 0.3,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          type: 'linear',
+          min: 0,
+          ticks: {
+            stepSize: stepSize,
+            callback: (value) => value % 1 === 0 ? value + ' km' : value.toFixed(1)
+          },
+          title: { display: true, text: "Distance (km)", font: { size: 10 } },
         },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: {
-              title: { display: true, text: "Distance (km)", font: { size: 10 } },
-              ticks: { maxTicksLimit: 6, font: { size: 9 } }
-            },
-            y: {
-              title: { display: true, text: "Elevation (m)", font: { size: 10 } },
-              ticks: { font: { size: 9 } }
-            }
-          }
+        y: {
+          title: { display: true, text: "Elevation (m)", font: { size: 10 } },
+          ticks: { font: { size: 9 } }
         }
-      });
+      }
     }
+  });
+}
 
 // -------------------------------------------------------------------------
 // Custom weight experiment — tests a single user-supplied elevation weight
@@ -3039,8 +3046,13 @@ function closeProfileModal() {
 }
 
 function renderExpandedElevationChart(route) {
-  const labels = route.elevation_profile.map(p => (p.distance / 1000).toFixed(2));
-  const elevations = route.elevation_profile.map(p => p.elevation);
+  const chartData = route.elevation_profile.map(p => ({
+    x: parseFloat((p.distance / 1000).toFixed(3)),
+    y: p.elevation
+  }));
+
+  const totalKm = chartData[chartData.length - 1]?.x ?? 0;
+  const stepSize = totalKm <= 3 ? 0.5 : totalKm <= 10 ? 1.0 : totalKm <= 25 ? 2.0 : 5.0;
 
   if (expandedElevationChart) expandedElevationChart.destroy();
 
@@ -3048,10 +3060,9 @@ function renderExpandedElevationChart(route) {
   expandedElevationChart = new Chart(ctx, {
     type: "line",
     data: {
-      labels,
       datasets: [{
         label: "Elevation (m)",
-        data: elevations,
+        data: chartData,
         borderColor: PROFILE_COLORS[route.profile],
         backgroundColor: PROFILE_COLORS[route.profile] + "22",
         borderWidth: 2.5,
@@ -3069,15 +3080,20 @@ function renderExpandedElevationChart(route) {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            title: items => `Distance: ${items[0].label} km`,
-            label: item => `Elevation: ${item.raw} m`,
+            title: items => `Distance: ${items[0].parsed.x.toFixed(2)} km`,
+            label: item => `Elevation: ${item.parsed.y} m`,
           }
         }
       },
       scales: {
         x: {
+          type: 'linear',
+          min: 0,
+          ticks: {
+            stepSize: stepSize,
+            callback: (value) => value % 1 === 0 ? value + ' km' : value.toFixed(1)
+          },
           title: { display: true, text: "Distance (km)" },
-          ticks: { maxTicksLimit: 12 }
         },
         y: {
           title: { display: true, text: "Elevation (m)" }
