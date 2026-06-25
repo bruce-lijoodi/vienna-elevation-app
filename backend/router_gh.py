@@ -262,8 +262,21 @@ def compute_routes(G, origin_lat, origin_lon, dest_lat=None, dest_lon=None,
         return []
 
     paths = data.get("paths", [])
+
+    # alternative_route can return empty for short distances or constrained networks;
+    # fall back to a plain best-route request so we always get at least one result.
     if not paths:
-        logger.warning("GH: no paths returned")
+        logger.warning("GH: no alternative paths returned, falling back to single route")
+        fallback = {k: v for k, v in payload.items()
+                    if not k.startswith("alternative_route") and k != "algorithm"}
+        try:
+            data = _gh_request(fallback)
+            paths = data.get("paths", [])
+        except Exception as e:
+            logger.error(f"GH fallback error: {e}")
+            return []
+
+    if not paths:
         return []
 
     routes = []
