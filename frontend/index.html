@@ -1285,26 +1285,6 @@
         <button id="dest-loc-btn" class="location-btn" onclick="useMyLocation('destination')">📡 Use my current location</button>
       </div>
 
-      <!-- Routing engine selector -->
-      <div class="input-group">
-        <label>⚙️ Routing Engine</label>
-        <div class="router-toggle">
-          <label class="router-option">
-            <input type="radio" name="router" value="local" checked>
-            <div>
-              <div>OSMnx</div>
-              <small>SRTM · 90m</small>
-            </div>
-          </label>
-          <label class="router-option">
-            <input type="radio" name="router" value="graphhopper">
-            <div>
-              <div>GraphHopper</div>
-              <small>Mapterhorn · 30m</small>
-            </div>
-          </label>
-        </div>
-      </div>
 
     <div class="control-group">
       <label>🌿 ROUTE STYLE</label>
@@ -1368,20 +1348,6 @@
         <div class="calc-results" id="calc-results"></div>
       </div>
 
-      <!-- Custom Weight Experiment Panel -->
-      <div id="custom-weight-panel">
-        <h2>🔬 Weight Experiment</h2>
-        <div class="custom-weight-inputs">
-          <div class="pace-field">
-            <label class="pace-field" style="font-size:0.72rem;font-weight:600;color:#666;text-transform:uppercase">Elevation weight</label>
-            <input type="number" id="custom-weight-input" value="5000" step="100"
-              style="width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.88rem" />
-          </div>
-          <button class="custom-weight-run-btn" onclick="testCustomWeight()">Run</button>
-        </div>
-        <div id="custom-weight-status"></div>
-        <p class="custom-weight-hint">Positive = avoid hills · 0 = shortest · Negative = seek hills</p>
-      </div>
 
     </div>
 
@@ -1968,7 +1934,6 @@ document.getElementById("btn-set-dest").addEventListener("click", function () {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             origin_lat, origin_lon, dest_lat, dest_lon,
-            router: document.querySelector('input[name="router"]:checked').value,
           }),
         });
 
@@ -2017,10 +1982,8 @@ document.getElementById("btn-set-dest").addEventListener("click", function () {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             origin_lat, origin_lon,
-            router: document.querySelector('input[name="router"]:checked').value,
             mode: "loop",
             loop_distance_km: km,
-
           }),
         });
 
@@ -2177,7 +2140,6 @@ function renderRouteCards(routes) {
   });
 
   document.getElementById("pace-calculator").style.display = "block";
-  document.getElementById("custom-weight-panel").style.display = "block";
 }
     // -------------------------------------------------------------------------
     // Select a route — highlight it on the map and update the elevation chart
@@ -2375,55 +2337,6 @@ function renderRouteCards(routes) {
 // Custom weight experiment — tests a single user-supplied elevation weight
 // -------------------------------------------------------------------------
 
-async function testCustomWeight() {
-  const origin = getOriginCoords();
-  const dest   = getDestCoords();
-
-  if (!origin) { alert("Please set an origin location first."); return; }
-  if (!dest)   { alert("Please set a destination location first."); return; }
-
-  const weight = parseFloat(document.getElementById("custom-weight-input").value);
-  if (isNaN(weight)) { alert("Enter a numeric weight value."); return; }
-
-  const statusEl = document.getElementById("custom-weight-status");
-  statusEl.textContent = "Computing…";
-
-  try {
-    const res = await fetch(`${API_URL}/routes/custom-weight`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        origin_lat: origin.lat,
-        origin_lon: origin.lon,
-        dest_lat:   dest.lat,
-        dest_lon:   dest.lon,
-        weight,
-      }),
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      statusEl.textContent = "Error: " + err.detail;
-      return;
-    }
-
-    const route = await res.json();
-    statusEl.textContent =
-      `weight ${weight} → ${(route.distance_m / 1000).toFixed(2)} km · ↑${route.elevation_gain_m} m · ↓${route.elevation_loss_m} m`;
-
-    routeLayers.forEach(l => map.removeLayer(l));
-    routeLayers = [];
-    const layer = L.polyline(
-      route.coordinates.map(c => [c[1], c[0]]),
-      { color: "#9c27b0", weight: 5, opacity: 0.9 }
-    ).addTo(map);
-    routeLayers.push(layer);
-    map.fitBounds(layer.getBounds(), { padding: [40, 40] });
-
-  } catch (err) {
-    statusEl.textContent = "Error: " + err.message;
-  }
-}
 
 // -------------------------------------------------------------------------
 // Navigation — turn-by-turn style tracking along a chosen route
