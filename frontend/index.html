@@ -429,31 +429,6 @@
       text-transform: uppercase;
     }
 
-    .style-toggle-row {
-      display: flex;
-      gap: 8px;
-    }
-
-    .style-option {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 7px 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.82rem;
-      transition: border-color 0.2s, background 0.2s;
-    }
-
-    .style-option input[type="radio"] { display: none; }
-
-    .style-option:has(input:checked) {
-      border-color: #4a90d9;
-      background: #f0f7ff;
-      font-weight: 600;
-    }
 
     /* Custom weight experiment panel */
     #custom-weight-panel {
@@ -1285,20 +1260,6 @@
         <button id="dest-loc-btn" class="location-btn" onclick="useMyLocation('destination')">📡 Use my current location</button>
       </div>
 
-
-    <div class="control-group">
-      <label>🌿 ROUTE STYLE</label>
-      <div class="style-toggle-row">
-        <label class="style-option">
-          <input type="radio" name="route-style" value="default" checked>
-          <span>Default</span>
-        </label>
-        <label class="style-option">
-          <input type="radio" name="route-style" value="park">
-          <span>Park mode</span>
-        </label>
-      </div>
-    </div>
 
 
       <!-- Get Routes button -->
@@ -2689,7 +2650,7 @@ function getRunningVerdict(temp, windspeed, wmo) {
   if (windspeed > 25)
     return ["verdict-ok",   "💨 Windy ("+windspeed+" km/h) — plan your route into wind first, with it on return."];
   if (temp > 26)
-    return ["verdict-ok",   "☀️ Warm — bring water, prefer shaded routes (park mode)."];
+    return ["verdict-ok",   "☀️ Warm — bring water and prefer shaded routes."];
   if (temp >= 8 && temp <= 18 && windspeed < 20 && !isRain)
     return ["verdict-great","🏃 Perfect running conditions! Great time to head out."];
   if (temp >= 4 && temp < 8)
