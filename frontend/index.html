@@ -2251,10 +2251,10 @@ function renderRouteCards(routes) {
 
         // Update just this card's stats
         const pace3   = parsePace(document.getElementById("pace-input")?.value || "6:00");
-        const newMin2 = Math.round(route.distance_m / 1000 * pace3);
+        const newMin2 = Math.round(gradeAdjustedMinutes(route, pace3));
         document.getElementById(`card-stats-${index}`).innerHTML = `
           <span>📏 Distance: ${(route.distance_m / 1000).toFixed(2)} km</span>
-          <span>⏱ Est. time: ${newMin2} min</span>
+          <span>⏱ Est. time (running): ${newMin2} min</span>
           <span>⬆️ Gain: ${route.elevation_gain_m} m</span>
           <span>⬇️ Loss: ${route.elevation_loss_m} m</span>
         `;
