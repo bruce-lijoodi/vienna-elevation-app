@@ -2293,14 +2293,13 @@ function renderRouteCards(routes) {
 function renderElevationChart(route) {
   document.getElementById("chart-container").style.display = "block";
 
-  // {x, y} формат для linear scale
   const chartData = route.elevation_profile.map(p => ({
     x: parseFloat((p.distance / 1000).toFixed(3)),
     y: p.elevation
   }));
 
   const totalKm = chartData[chartData.length - 1]?.x ?? 0;
-  const stepSize = totalKm <= 3 ? 0.5 : 1.0;  // до 3км — каждые 500м, дальше — 1км
+  const stepSize = totalKm <= 3 ? 0.5 : 1.0;  // short routes: 500m ticks; longer: 1km ticks
 
   if (elevationChart) elevationChart.destroy();
 
@@ -2310,7 +2309,7 @@ function renderElevationChart(route) {
     data: {
       datasets: [{
         label: "Elevation (m)",
-        data: chartData,           // ← {x, y} объекты, NO labels
+        data: chartData,
         borderColor: PROFILE_COLORS[route.profile],
         backgroundColor: PROFILE_COLORS[route.profile] + "33",
         borderWidth: 2,
@@ -2907,9 +2906,6 @@ function toggleSplits(id) {
     : "▶ Show km splits";
 }
 
-// Show calculator once routes are loaded
-// Найди функцию где ты рендеришь route-cards и добавь туда:
-// document.getElementById("pace-calculator").style.display = "block";
 
 // -------------------------------------------------------------------------
 // Sun Indicator — SunCalc
