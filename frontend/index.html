@@ -445,43 +445,6 @@
       margin-bottom: 10px;
     }
 
-    .custom-weight-inputs {
-      display: flex;
-      gap: 8px;
-      align-items: flex-end;
-    }
-
-    .custom-weight-inputs .pace-field { flex: 1; }
-
-    .custom-weight-run-btn {
-      background: #7b1fa2;
-      color: white;
-      border: none;
-      padding: 7px 14px;
-      border-radius: 6px;
-      font-size: 0.82rem;
-      cursor: pointer;
-      font-weight: 600;
-      height: 34px;
-      white-space: nowrap;
-      transition: background 0.2s;
-    }
-
-    .custom-weight-run-btn:hover { background: #6a1b9a; }
-
-    #custom-weight-status {
-      font-size: 0.78rem;
-      color: #555;
-      margin-top: 8px;
-      min-height: 1.2em;
-    }
-
-    .custom-weight-hint {
-      font-size: 0.72rem;
-      color: #888;
-      margin-top: 6px;
-      line-height: 1.4;
-    }
 
     /* Route card refine control */
     .card-refine {
@@ -771,151 +734,6 @@
 }
 
 
-/* -----------------------------------------------------------------------
-   Pace Calculator
------------------------------------------------------------------------ */
-#pace-calculator {
-  background: #f8f9ff;
-  border: 1px solid #dde3f0;
-  border-radius: 10px;
-  padding: 14px;
-}
-
-#pace-calculator h2 {
-  font-size: 0.85rem;
-  color: #1a1a2e;
-  margin-bottom: 10px;
-}
-
-.pace-inputs {
-  display: flex;
-  gap: 8px;
-  align-items: flex-end;
-  flex-wrap: wrap;
-}
-
-.pace-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-  min-width: 80px;
-}
-
-.pace-field label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #666;
-  text-transform: uppercase;
-}
-
-.pace-field input {
-  padding: 7px 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.88rem;
-  width: 100%;
-}
-
-.pace-field input:focus {
-  outline: none;
-  border-color: #4a90d9;
-}
-
-.calc-btn {
-  background: #1a1a2e;
-  color: white;
-  border: none;
-  padding: 7px 14px;
-  border-radius: 6px;
-  font-size: 0.82rem;
-  cursor: pointer;
-  font-weight: 600;
-  white-space: nowrap;
-  transition: background 0.2s;
-  height: 34px;
-}
-
-.calc-btn:hover { background: #4a90d9; }
-
-.calc-results {
-  display: none;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.calc-results.visible { display: flex; }
-
-.calc-route-block {
-  border-radius: 8px;
-  padding: 10px 12px;
-}
-
-.calc-route-block.flattest { background: #e8f5e9; }
-.calc-route-block.balanced { background: #fff8e1; }
-.calc-route-block.steepest { background: #fce4ec; }
-
-.calc-route-title {
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: capitalize;
-  margin-bottom: 6px;
-  color: #1a1a2e;
-}
-
-.calc-stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px 12px;
-}
-
-.calc-stat {
-  font-size: 0.78rem;
-  color: #444;
-}
-
-.calc-stat strong {
-  color: #1a1a2e;
-}
-
-.splits-toggle {
-  font-size: 0.72rem;
-  color: #4a90d9;
-  cursor: pointer;
-  background: none;
-  border: none;
-  padding: 0;
-  margin-top: 4px;
-  text-decoration: underline;
-}
-
-.splits-table {
-  display: none;
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.72rem;
-  margin-top: 6px;
-}
-
-.splits-table.open { display: table; }
-
-.splits-table th {
-  text-align: left;
-  color: #888;
-  font-weight: 600;
-  padding: 3px 4px;
-  border-bottom: 1px solid rgba(0,0,0,0.1);
-}
-
-.splits-table td {
-  padding: 3px 4px;
-  color: #333;
-}
-
-.splits-table tr:nth-child(even) td {
-  background: rgba(0,0,0,0.03);
-}
 
 
 /* -----------------------------------------------------------------------
@@ -1291,22 +1109,6 @@
           <button class="expand-profile-btn" onclick="openProfileModal()">⤢ Expand</button>
         </div>
         <canvas id="elevation-chart"></canvas>
-      </div>
-            <!-- Pace & Effort Calculator -->
-      <div id="pace-calculator" style="display:none">
-        <h2>🧮 Effort Calculator</h2>
-        <div class="pace-inputs">
-          <div class="pace-field">
-            <label>Pace (min/km)</label>
-            <input type="text" id="pace-input" placeholder="6:00" value="6:00" />
-          </div>
-          <div class="pace-field">
-            <label>Weight (kg)</label>
-            <input type="number" id="weight-input" placeholder="70" value="70" min="40" max="150" />
-          </div>
-          <button class="calc-btn" onclick="calculateEffort()">Calculate</button>
-        </div>
-        <div class="calc-results" id="calc-results"></div>
       </div>
 
 
@@ -2061,7 +1863,7 @@ function renderRouteCards(routes) {
   routes.forEach((route, index) => {
     const unit       = "min";
     const directKm   = route.distance_m / 1000;
-    const pace       = parsePace(document.getElementById("pace-input")?.value || "6:00");
+    const pace       = 6.0;
     const estMin     = Math.round(gradeAdjustedMinutes(route, pace));
     const directMin  = Math.round(directKm * pace);
     const defaultVal = estMin;
@@ -2101,7 +1903,6 @@ function renderRouteCards(routes) {
     container.appendChild(card);
   });
 
-  document.getElementById("pace-calculator").style.display = "block";
 }
     // -------------------------------------------------------------------------
     // Select a route — highlight it on the map and update the elevation chart
@@ -2132,7 +1933,7 @@ function renderRouteCards(routes) {
       const input    = document.getElementById(`refine-${index}`);
       const oldUnit  = input.dataset.unit;
       const newUnit  = oldUnit === "km" ? "min" : "km";
-      const pace     = parsePace(document.getElementById("pace-input")?.value || "6:00");
+      const pace     = 6.0;
       const directKm = parseFloat(input.dataset.directKm);
       const current  = parseFloat(input.value);
 
@@ -2177,10 +1978,10 @@ function renderRouteCards(routes) {
         return;
       }
 
-      // Convert minutes → km using pace from the effort calculator (default 6:00 /km)
+      // Convert minutes → km using default running pace 6:00 /km
       let target_km;
       if (unit === "min") {
-        const paceMinPerKm = parsePace(document.getElementById("pace-input")?.value || "6:00");
+        const paceMinPerKm = 6.0;
         target_km = val / paceMinPerKm;
       } else {
         target_km = val;
@@ -2211,7 +2012,7 @@ function renderRouteCards(routes) {
         currentRoutes[index] = route;
 
         // Update just this card's stats
-        const pace3   = parsePace(document.getElementById("pace-input")?.value || "6:00");
+        const pace3   = 6.0;
         const newMin2 = Math.round(gradeAdjustedMinutes(route, pace3));
         document.getElementById(`card-stats-${index}`).innerHTML = `
           <span>📏 Distance: ${(route.distance_m / 1000).toFixed(2)} km</span>
@@ -2221,7 +2022,7 @@ function renderRouteCards(routes) {
         `;
 
         // Update refine input to show what was actually achieved
-        const pace2    = parsePace(document.getElementById("pace-input")?.value || "6:00");
+        const pace2    = 6.0;
         const achieved = unit === "min"
           ? Math.round(route.distance_m / 1000 * pace2)
           : (route.distance_m / 1000).toFixed(1);
@@ -2531,7 +2332,7 @@ function finishNavigation(completedDist, elapsedSec, avgSpeedKmh) {
   const paceText = `${Math.floor(paceMin)}:${String(Math.round((paceMin % 1)*60)).padStart(2,"0")} /km`;
 
   // Estimate kcal: MET ~8 for running, 70 kg default
-  const weight = parseFloat(document.getElementById("weight-input")?.value) || 70;
+  const weight = 70;
   const kcal   = Math.round(8 * weight * (elapsedSec / 3600));
 
   document.getElementById("fin-dist").textContent  = distKm + " km";
@@ -2708,12 +2509,6 @@ if (window.innerWidth <= 768) {
   if (btn) btn.textContent = "☀️ Show widgets";
 }
 
-// -------------------------------------------------------------------------
-// Effort Calculator — Grade Adjusted Pace, Calories, Splits
-// -------------------------------------------------------------------------
-
-// Minetti et al. correction factor for grade
-// g = grade as decimal (0.1 = 10% slope)
 function gradeMultiplier(g) {
   // Polynomial fit from Minetti 2002, clamped to ±30%
   g = Math.max(-0.30, Math.min(0.30, g));
@@ -2732,139 +2527,6 @@ function gradeAdjustedMinutes(route, paceMinPerKm) {
     totalSec += (segDist / 1000) * paceMinPerKm * gradeMultiplier(grade) * 60;
   }
   return totalSec / 60;
-}
-
-function parsePace(str) {
-  // Accept "6:00" or "6.0" → returns decimal minutes per km
-  str = str.trim();
-  if (str.includes(":")) {
-    const [m, s] = str.split(":").map(Number);
-    return m + (s || 0) / 60;
-  }
-  return parseFloat(str);
-}
-
-function formatTime(totalSeconds) {
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = Math.round(totalSeconds % 60);
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m ${s.toString().padStart(2,"0")}s`;
-}
-
-function formatPace(minPerKm) {
-  const m = Math.floor(minPerKm);
-  const s = Math.round((minPerKm - m) * 60);
-  return `${m}:${s.toString().padStart(2,"0")} /km`;
-}
-
-function calculateEffort() {
-  if (!currentRoutes.length) return;
-
-  const paceMin = parsePace(document.getElementById("pace-input").value);
-  const weight  = parseFloat(document.getElementById("weight-input").value) || 70;
-
-  if (isNaN(paceMin) || paceMin <= 0) {
-    alert("Enter a valid pace, e.g. 6:00");
-    return;
-  }
-
-  const container = document.getElementById("calc-results");
-  container.innerHTML = "";
-
-  currentRoutes.forEach((route, idx) => {
-    const profile = route.elevation_profile; // [{distance, elevation}, ...]
-    if (!profile || profile.length < 2) return;
-
-    let totalAdjustedTime = 0; // seconds
-    let totalKcal = 0;
-    let flatEquivalentDist = 0;
-    const splits = []; // per-km breakdown
-
-    let kmStart = 0;
-    let kmElev  = profile[0].elevation;
-    let kmAdjTime = 0;
-
-    for (let i = 1; i < profile.length; i++) {
-      const segDist = profile[i].distance - profile[i-1].distance; // metres
-      const elevDiff = profile[i].elevation - profile[i-1].elevation;
-      const grade = segDist > 0 ? elevDiff / segDist : 0;
-
-      const mult   = gradeMultiplier(grade);
-      const adjPace = paceMin * mult;           // min/km adjusted
-      const segTime = (segDist / 1000) * adjPace * 60; // seconds
-
-      // MET scales with speed and grade
-      const speedKmh = 60 / adjPace;
-      const met = Math.min(18, 2.5 + speedKmh * 0.9 + Math.max(0, grade) * 15);
-      const segHours = segTime / 3600;
-      totalKcal += met * weight * segHours;
-
-      flatEquivalentDist += (segDist / 1000) * mult;
-      totalAdjustedTime  += segTime;
-      kmAdjTime += segTime;
-
-      // Record split every ~1km
-      const currentKm = profile[i].distance / 1000;
-      if (currentKm - kmStart >= 1.0 || i === profile.length - 1) {
-        const splitGrade = (profile[i].elevation - kmElev) / ((currentKm - kmStart) * 1000);
-        splits.push({
-          km:    Math.ceil(currentKm),
-          time:  formatTime(kmAdjTime),
-          pace:  formatPace(kmAdjTime / 60 / Math.max(0.01, currentKm - kmStart)),
-          grade: (splitGrade * 100).toFixed(1),
-          elev:  Math.round(profile[i].elevation),
-        });
-        kmStart   = currentKm;
-        kmElev    = profile[i].elevation;
-        kmAdjTime = 0;
-      }
-    }
-
-    const avgAdjPace = (totalAdjustedTime / 60) / (route.distance_m / 1000);
-
-    // Build block HTML
-    const block = document.createElement("div");
-    block.className = `calc-route-block ${route.profile}`;
-
-    const splitsId = `splits-${idx}`;
-    block.innerHTML = `
-      <div class="calc-route-title">${route.profile} — ${(route.distance_m/1000).toFixed(1)} km</div>
-      <div class="calc-stats-grid">
-        <div class="calc-stat">⏱️ Time: <strong>${formatTime(totalAdjustedTime)}</strong></div>
-        <div class="calc-stat">🔥 Calories: <strong>${Math.round(totalKcal)} kcal</strong></div>
-        <div class="calc-stat">📐 Avg pace: <strong>${formatPace(avgAdjPace)}</strong></div>
-        <div class="calc-stat">💪 Effort eq: <strong>${flatEquivalentDist.toFixed(1)} km flat</strong></div>
-      </div>
-      <button class="splits-toggle" onclick="toggleSplits('${splitsId}')">▶ Show km splits</button>
-      <table class="splits-table" id="${splitsId}">
-        <thead><tr>
-          <th>km</th><th>pace</th><th>grade</th><th>elev</th><th>time</th>
-        </tr></thead>
-        <tbody>
-          ${splits.map(s => `<tr>
-            <td>${s.km}</td>
-            <td>${s.pace}</td>
-            <td>${s.grade > 0 ? "+" : ""}${s.grade}%</td>
-            <td>${s.elev}m</td>
-            <td>${s.time}</td>
-          </tr>`).join("")}
-        </tbody>
-      </table>
-    `;
-    container.appendChild(block);
-  });
-
-  container.classList.add("visible");
-}
-
-function toggleSplits(id) {
-  const table = document.getElementById(id);
-  const btn   = table.previousElementSibling;
-  table.classList.toggle("open");
-  btn.textContent = table.classList.contains("open")
-    ? "▼ Hide km splits"
-    : "▶ Show km splits";
 }
 
 
