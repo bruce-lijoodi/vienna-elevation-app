@@ -254,6 +254,21 @@
       height: 160px;
     }
 
+    #finish-chart-wrap {
+      width: 100%;
+      background: #222;
+      border-radius: 14px;
+      padding: 10px;
+      box-sizing: border-box;
+      margin-top: 10px;
+    }
+
+    #finish-elevation-chart {
+      width: 100%;
+      height: 180px;
+      display: block;
+    }
+
     /* -----------------------------------------------------------------------
        Map — takes up the rest of the screen
     ----------------------------------------------------------------------- */
@@ -353,17 +368,33 @@
     }
     #nav-route-name { font-weight: bold; font-size: 1rem; letter-spacing: 1px; }
     #nav-status { font-size: 0.85rem; }
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    #nav-finish-btn,
     #nav-stop-btn {
-      background: #e91e63;
       border: none;
       color: white;
-      padding: 6px 16px;
+      padding: 6px 14px;
       border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
       font-size: 0.85rem;
     }
-    #nav-stop-btn:hover { background: #c2185b; }
+    #nav-finish-btn {
+      background: #4caf50;
+    }
+    #nav-finish-btn:hover {
+      background: #43a047;
+    }
+    #nav-stop-btn {
+      background: #e91e63;
+    }
+    #nav-stop-btn:hover {
+      background: #c2185b;
+    }
     .nav-stats { display: flex; gap: 36px; }
     .nav-stat { display: flex; flex-direction: column; }
     .nav-stat span { font-size: 1.9rem; font-weight: bold; line-height: 1; }
@@ -548,12 +579,23 @@
 
       /* Sidebar fills the rest and scrolls internally */
       #sidebar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 500;
         width: 100%;
-        flex: 1;
-        min-height: 0;
-        padding: 14px 16px;
-        gap: 12px;
-        box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+        height: 48dvh;          /* всегда открыт */
+        max-height: 48dvh;
+        min-height: unset;
+        background: white;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
+        padding: 0 16px 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
 
       /* Shorter elevation chart to save space */
@@ -598,9 +640,12 @@
 
       #app.nav-mode #sidebar {
         max-height: 0;
+        height: 0;
+        min-height: 0;
         padding-top: 0;
         padding-bottom: 0;
         overflow: hidden;
+        box-shadow: none;
       }
 
       /* Map fills the full app height when sidebar is hidden */
@@ -724,12 +769,26 @@
 .weather-refresh:hover { background: rgba(255,255,255,0.1); }
 
 @media (max-width: 768px) {
+  .weather-details,
+  .weather-verdict,
+  .weather-refresh,
+  .weather-desc {
+    display: none !important;
+  }
+
   #weather-widget {
-    top: auto;
-    bottom: 80px;  /* above nav-panel */
-    right: 8px;
-    max-width: 180px;
-    font-size: 0.9em;
+    min-width: unset;
+    max-width: 90px;
+    padding: 6px 10px;
+    gap: 2px;
+  }
+
+  .weather-temp {
+    font-size: 1.2rem;
+  }
+
+  #w-icon {
+    font-size: 1.2rem !important;
   }
 }
 
@@ -787,10 +846,7 @@
 }
 
 @media (max-width: 768px) {
-  #sun-indicator {
-    bottom: 90px;
-    right: 8px;
-  }
+  #sun-indicator { display: none !important; }  /* добавь эту строку */
 }
 
 
@@ -992,35 +1048,22 @@
 
 .contour-text-label span {
   display: inline-block;
-  padding: 1px 4px;
-  font-size: 10px;
-  line-height: 1;
-  font-weight: 700;
-  color: #6d544d;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(125, 94, 87, 0.22);
-  border-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  padding: 2px 6px;
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(60, 50, 40, 0.9) 0%, rgba(80, 70, 60, 0.85) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.15);
   white-space: nowrap;
+  backdrop-filter: blur(2px);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 
-.map-widget-toggle {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 1000;
-  border: none;
-  border-radius: 999px;
-  padding: 7px 12px;
-  background: rgba(26, 26, 46, 0.9);
-  color: white;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-  display: none;
-}
 
 .widgets-collapsed #weather-widget,
 .widgets-collapsed #sun-indicator {
@@ -1028,9 +1071,6 @@
 }
 
 @media (max-width: 768px) {
-  .map-widget-toggle {
-    display: block;
-  }
 
   #weather-widget,
   #sun-indicator {
@@ -1132,10 +1172,6 @@
       <button class="weather-refresh" onclick="loadWeather()">↻ refresh</button>
     </div>
 
-<button id="weather-toggle-btn" class="map-widget-toggle" onclick="toggleWeatherSun()">
-  ☀️ Weather
-</button>
-
 
     <!-- Sun Indicator -->
 <div id="sun-indicator">
@@ -1171,7 +1207,10 @@
     <div class="nav-header">
       <span id="nav-route-name">FLATTEST</span>
       <span id="nav-status">✅ On route</span>
-      <button id="nav-stop-btn" onclick="stopNavigation()">✕ Stop</button>
+      <div class="nav-buttons">
+        <button id="nav-finish-btn" onclick="manualFinishNavigation()">✔ Finish</button>
+        <button id="nav-stop-btn" onclick="stopNavigation()">✕ Stop</button>
+      </div>
     </div>
     <div class="nav-stats">
       <div class="nav-stat">
@@ -1252,12 +1291,33 @@
 
     let originMarker = null;      // The origin pin on the map
     let destMarker = null;        // The destination pin on the map
-    let routeLayers = [];         // The route lines drawn on the map
+    let routeLayers = [];         // The route polyline layers drawn on the map
+    let routeDecorations = [];    // The arrow markers and decorations for each route
     let elevationChart = null;    // The Chart.js chart instance
+    let finishElevationChart = null; // Chart shown on finish modal
     let currentRoutes = [];       // The routes returned by the API
 
     let expandedElevationChart = null;
     let selectedRouteIndex = 0;
+
+    const ARROW_INTERVAL_M = 200;
+    function distM(a, b) {
+      const R = 6371000;
+      const dLat = (b[0] - a[0]) * Math.PI / 180;
+      const dLon = (b[1] - a[1]) * Math.PI / 180;
+      const s = Math.sin(dLat/2)**2 +
+                Math.cos(a[0]*Math.PI/180) * Math.cos(b[0]*Math.PI/180) * Math.sin(dLon/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1-s));
+    }
+
+    function bearingDeg(a, b) {
+      const lat1 = a[0] * Math.PI / 180;
+      const lat2 = b[0] * Math.PI / 180;
+      const dLon = (b[1] - a[1]) * Math.PI / 180;
+      const x = Math.sin(dLon) * Math.cos(lat2);
+      const y = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+      return (Math.atan2(x, y) * 180 / Math.PI + 360) % 360;
+    }
 
     // Navigation state
     let isNavigating = false;
@@ -1288,10 +1348,14 @@ function loadContours() {
         style: feature => {
           const elev = Number(feature.properties?.ELEV ?? 0);
           const major = elev % 50 === 0;
+          const minor = elev % 10 === 0;
+          
           return {
-            color: "#7b5e57",
-            weight: major ? 1.5 : 0.7,
-            opacity: major ? 0.8 : 0.35
+            color: major ? "#6b5245" : minor ? "#8b7965" : "#a0957d",
+            weight: major ? 2.2 : minor ? 1.2 : 0.6,
+            opacity: major ? 0.85 : minor ? 0.55 : 0.25,
+            lineCap: "round",
+            lineJoin: "round"
           };
         }
       });
@@ -1300,6 +1364,7 @@ function loadContours() {
 
       data.features.forEach(feature => {
         const elev = Number(feature.properties?.ELEV ?? 0);
+        // Only label major contours (every 50m)
         if (elev % 50 !== 0) return;
 
         const geom = feature.geometry;
@@ -1325,8 +1390,8 @@ function loadContours() {
           icon: L.divIcon({
             className: "contour-text-label",
             html: `<span>${elev} m</span>`,
-            iconSize: [44, 16],
-            iconAnchor: [22, 8]
+            iconSize: [50, 20],
+            iconAnchor: [25, 10]
           })
         });
 
@@ -1336,7 +1401,7 @@ function loadContours() {
       contoursLoaded = true;
       contourLayer.addTo(map);
 
-      if (map.getZoom() >= 13) {
+      if (map.getZoom() >= 12) {
         contourLabelsLayer.addTo(map);
       }
 
@@ -1350,7 +1415,7 @@ function loadContours() {
 function updateContourLabelsVisibility() {
   if (!contoursLoaded || !contourLabelsLayer) return;
 
-  if (map.getZoom() >= 13) {
+  if (map.getZoom() >= 12) {
     if (!map.hasLayer(contourLabelsLayer)) contourLabelsLayer.addTo(map);
   } else {
     if (map.hasLayer(contourLabelsLayer)) map.removeLayer(contourLabelsLayer);
@@ -1709,10 +1774,11 @@ document.getElementById("btn-set-dest").addEventListener("click", function () {
 
         const data = await response.json();
         currentRoutes = data.routes;
+        selectedRouteIndex = 0;
 
         drawRoutes(currentRoutes);
         renderRouteCards(currentRoutes);
-        renderElevationChart(currentRoutes[0]);
+        selectRoute(0);
 
       } catch (err) {
         alert("Could not connect to the backend. Make sure the server is running.");
@@ -1759,10 +1825,11 @@ document.getElementById("btn-set-dest").addEventListener("click", function () {
 
         const data = await response.json();
         currentRoutes = data.routes;
+        selectedRouteIndex = 0;
 
         drawRoutes(currentRoutes);
         renderRouteCards(currentRoutes);
-        renderElevationChart(currentRoutes[0]);
+        selectRoute(0);
 
       } catch (err) {
         alert("Could not connect to the backend. Make sure the server is running.");
@@ -1778,9 +1845,11 @@ document.getElementById("btn-set-dest").addEventListener("click", function () {
     // -------------------------------------------------------------------------
 
     function drawRoutes(routes) {
-      // Remove any previously drawn routes
+      // Remove any previously drawn routes and decorations
       routeLayers.forEach(layer => map.removeLayer(layer));
+      routeDecorations.forEach(layer => map.removeLayer(layer));
       routeLayers = [];
+      routeDecorations = [];
 
       routes.forEach((route, index) => {
         // Convert [lon, lat] coordinates to Leaflet's [lat, lon] format
@@ -1797,8 +1866,8 @@ document.getElementById("btn-set-dest").addEventListener("click", function () {
         // Draw the route as a coloured polyline on the map
         const layer = L.polyline(offsetLatLngs, {
           color: PROFILE_COLORS[route.profile],
-          weight: index === 0 ? 6 : 4,
-          opacity: index === 0 ? 1.0 : 0.5,
+          weight: index === selectedRouteIndex ? 6 : 4,
+          opacity: index === selectedRouteIndex ? 1.0 : 0.5,
         }).addTo(map);
 
         // Show route info when the user clicks on the line
@@ -1810,6 +1879,40 @@ document.getElementById("btn-set-dest").addEventListener("click", function () {
         `);
 
         routeLayers.push(layer);
+
+        let accumulated = 0;
+        for (let i = 0; i < latLngs.length - 1; i++) {
+          const a = latLngs[i];
+          const b = latLngs[i + 1];
+          accumulated += distM(a, b);
+
+          if (accumulated >= ARROW_INTERVAL_M) {
+            accumulated = 0;
+            // Сглаживаем угол по 3 точкам если возможно
+            const from = latLngs[Math.max(0, i - 1)];
+            const to   = latLngs[Math.min(latLngs.length - 1, i + 2)];
+            const angle = bearingDeg(from, to);
+
+            const arrowIcon = L.divIcon({
+              className: '',
+              html: `<svg width="14" height="14" viewBox="0 0 14 14"
+                       style="transform:rotate(${angle}deg);opacity:${index === 0 ? 0.95 : 0.5};
+                              filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">
+                       <polygon points="7,1 13,13 7,9 1,13"
+                         fill="${PROFILE_COLORS[route.profile]}" stroke="white" stroke-width="1.2"/>
+                     </svg>`,
+              iconSize: [14, 14],
+              iconAnchor: [7, 7]
+            });
+            const arrowMarker = L.marker([a[0], a[1]], {
+              icon: arrowIcon,
+              interactive: false,
+              zIndexOffset: 10
+            });
+            arrowMarker.addTo(map);
+            routeDecorations.push(arrowMarker);
+          }
+        }
       });
 
       // Zoom the map to fit all routes
@@ -1870,7 +1973,7 @@ function renderRouteCards(routes) {
     const defaultMin = directMin;
 
     const card = document.createElement("div");
-    card.className = `route-card ${route.profile} ${index === 0 ? "active" : ""}`;
+    card.className = `route-card ${route.profile} ${index === selectedRouteIndex ? "active" : ""}`;
     card.innerHTML = `
       <h3>${emojis[route.profile]} ${route.profile}</h3>
       <div class="stats" id="card-stats-${index}">
@@ -1881,7 +1984,7 @@ function renderRouteCards(routes) {
       </div>
       <div class="card-actions">
         <button class="nav-btn" onclick="event.stopPropagation(); startNavigation(${index})">▶ Navigate</button>
-        <button class="gpx-btn" onclick="event.stopPropagation(); downloadGPX(${index})">⬇ GPX</button>
+        <button class="gpx-btn" onclick="event.stopPropagation(); downloadGPX(${index})">Save</button>
       </div>
       <div class="card-refine" onclick="event.stopPropagation()">
         <span class="refine-label">Adjust:</span>
@@ -1909,14 +2012,17 @@ function renderRouteCards(routes) {
     // -------------------------------------------------------------------------
 
     function selectRoute(index) {
+      if (!currentRoutes || !currentRoutes[index]) return;
       selectedRouteIndex = index;
 
       routeLayers.forEach((layer, i) => {
-        layer.setStyle({
-          weight: i === index ? 6 : 3,
-          opacity: i === index ? 1.0 : 0.4,
-        });
-        if (i === index) layer.bringToFront();
+        if (typeof layer.setStyle === "function") {
+          layer.setStyle({
+            weight: i === index ? 6 : 3,
+            opacity: i === index ? 1.0 : 0.4,
+          });
+          if (i === index) layer.bringToFront();
+        }
       });
 
       document.querySelectorAll(".route-card").forEach((card, i) => {
@@ -2028,16 +2134,10 @@ function renderRouteCards(routes) {
           : (route.distance_m / 1000).toFixed(1);
         input.value = achieved;
 
-        // Replace just this route's polyline on the map
-        if (routeLayers[index]) map.removeLayer(routeLayers[index]);
-        const latLngs = route.coordinates.map(c => [c[1], c[0]]);
-        routeLayers[index] = L.polyline(latLngs, {
-          color: PROFILE_COLORS[profile],
-          weight: index === selectedRouteIndex ? 6 : 4,
-          opacity: index === selectedRouteIndex ? 1.0 : 0.5,
-        }).addTo(map);
-
-        if (index === selectedRouteIndex) renderElevationChart(route);
+        // Redraw all routes so decorations and styles stay consistent
+        drawRoutes(currentRoutes);
+        renderRouteCards(currentRoutes);
+        selectRoute(selectedRouteIndex);
 
       } catch (err) {
         alert("Could not connect to backend. Make sure the server is running.");
@@ -2145,6 +2245,9 @@ function updateNavVisualization(routeIndex, splitIndex) {
   if (navCompletedLayer) { map.removeLayer(navCompletedLayer); navCompletedLayer = null; }
   if (navRemainingLayer) { map.removeLayer(navRemainingLayer); navRemainingLayer = null; }
   routeLayers.forEach(l => map.removeLayer(l));
+  routeLayers = [];
+  routeDecorations.forEach(l => map.removeLayer(l));
+  routeDecorations = [];
 
   const all = route.coordinates.map(c => [c[1], c[0]]);
   const completed = all.slice(0, splitIndex + 1);
@@ -2159,6 +2262,41 @@ function updateNavVisualization(routeIndex, splitIndex) {
     navRemainingLayer = L.polyline(remaining, {
       color, weight: 7, opacity: 1.0,
     }).addTo(map);
+    drawNavigationArrows(remaining, color);
+    drawNavigationArrows(remaining, color);
+  }
+}
+
+function drawNavigationArrows(latLngs, color) {
+  let accumulated = 0;
+  for (let i = 0; i < latLngs.length - 1; i++) {
+    const a = latLngs[i];
+    const b = latLngs[i + 1];
+    accumulated += distM(a, b);
+    if (accumulated < ARROW_INTERVAL_M) continue;
+    accumulated = 0;
+
+    const from = latLngs[Math.max(0, i - 1)];
+    const to = latLngs[Math.min(latLngs.length - 1, i + 2)];
+    const angle = bearingDeg(from, to);
+
+    const arrowIcon = L.divIcon({
+      className: '',
+      html: `<svg width="14" height="14" viewBox="0 0 14 14"
+               style="transform:rotate(${angle}deg);filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">
+               <polygon points="7,1 13,13 7,9 1,13"
+                 fill="${color}" stroke="white" stroke-width="1.2"/>
+             </svg>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+    });
+
+    const arrowMarker = L.marker([a[0], a[1]], {
+      icon: arrowIcon,
+      interactive: false,
+      zIndexOffset: 10,
+    }).addTo(map);
+    routeDecorations.push(arrowMarker);
   }
 }
 
@@ -2234,7 +2372,8 @@ function onNavPositionUpdate(position) {
     route.coordinates[route.coordinates.length - 1][1],
     route.coordinates[route.coordinates.length - 1][0]
   );
-  if (distToEnd < 40) {
+  const progressFraction = (navStartDist - remaining) / Math.max(navStartDist, 1);
+  if (distToEnd < 40 && progressFraction > 0.10) {
     finishNavigation(completedDist, elapsedSec, avgSpeedKmh);
     return;
   }
@@ -2307,6 +2446,38 @@ function stopNavigation() {
   if (currentRoutes.length > 0) drawRoutes(currentRoutes);
 }
 
+function manualFinishNavigation() {
+  if (!isNavigating || navRouteIndex === null || !currentRoutes[navRouteIndex]) {
+    alert("Navigation is not active.");
+    return;
+  }
+
+  const route = currentRoutes[navRouteIndex];
+  const now = Date.now();
+  const elapsedSec = navStartTime ? (now - navStartTime) / 1000 : 0;
+
+  const actualTrackDist = navTrackPoints.reduce((sum, point, idx) => {
+    if (idx === 0) return 0;
+    const prev = navTrackPoints[idx - 1];
+    return sum + haversineDistance(prev.lat, prev.lon, point.lat, point.lon);
+  }, 0);
+
+  const avgSpeedMs = speedSamples.length > 0
+    ? speedSamples.reduce((a, b) => a + b, 0) / speedSamples.length
+    : elapsedSec > 0 ? actualTrackDist / elapsedSec : 0;
+  const avgSpeedKmh = avgSpeedMs * 3.6;
+
+  if (navTrackPoints.length < 2 && route.coordinates.length) {
+    const endCoord = route.coordinates[route.coordinates.length - 1];
+    const startCoord = route.coordinates[0];
+    const routeDist = haversineDistance(startCoord[1], startCoord[0], endCoord[1], endCoord[0]);
+    finishNavigation(routeDist, elapsedSec, avgSpeedKmh);
+    return;
+  }
+
+  finishNavigation(actualTrackDist, elapsedSec, avgSpeedKmh);
+}
+
 function toggleNavControls() {
   const app = document.getElementById("app");
   const btn = document.getElementById("nav-controls-btn");
@@ -2371,23 +2542,142 @@ ${trkpts}
   downloadBlob(gpx, `run_${name}_${datestamp()}.gpx`, "application/gpx+xml");
 }
 
-// ── JSON Export ───────────────────────────────────────────────────────────
-function exportJSON() {
+function renderFinishElevationChart() {
   const route = currentRoutes[navRouteIndex ?? 0];
-  const data  = {
-    profile:    route?.profile ?? "unknown",
-    date:       new Date().toISOString(),
-    distance_km: parseFloat(document.getElementById("fin-dist").textContent),
-    time:       document.getElementById("fin-time").textContent,
-    avg_pace:   document.getElementById("fin-pace").textContent,
-    avg_speed_kmh: parseFloat(document.getElementById("fin-speed").textContent),
-    kcal:       parseInt(document.getElementById("fin-kcal").textContent),
-    track:      navTrackPoints.map(p => ({
-      lat: p.lat, lon: p.lon, ele: p.ele,
-      time: new Date(p.ts).toISOString()
-    })),
-  };
-  downloadBlob(JSON.stringify(data, null, 2), `run_${datestamp()}.json`, "application/json");
+  const routeProfile = route?.elevation_profile || [];
+  const hasRecordedElevation = navTrackPoints.length > 2 && navTrackPoints.some(p => p.ele !== undefined && p.ele !== 0);
+  const points = hasRecordedElevation ? navTrackPoints : routeProfile;
+  const chartData = [];
+  let cumulative = 0;
+
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    if (p.distance !== undefined && p.elevation !== undefined) {
+      chartData.push({ x: parseFloat((p.distance / 1000).toFixed(3)), y: p.elevation });
+      continue;
+    }
+
+    if (i > 0 && points[i - 1].lat !== undefined && p.lat !== undefined) {
+      cumulative += haversineDistance(points[i - 1].lat, points[i - 1].lon, p.lat, p.lon);
+    }
+    chartData.push({ x: parseFloat((cumulative / 1000).toFixed(3)), y: p.ele ?? 0 });
+  }
+
+  if (!chartData.length && routeProfile.length) {
+    chartData.push({ x: 0, y: routeProfile[0].elevation || 0 });
+  }
+
+  if (finishElevationChart) finishElevationChart.destroy();
+
+  const routeColor = route ? (PROFILE_COLORS[route.profile] || "#4caf50") : "#4caf50";
+  const fillColor = routeColor + "33";
+
+  const ctx = document.getElementById("finish-elevation-chart").getContext("2d");
+  finishElevationChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      datasets: [{
+        label: hasRecordedElevation ? "Recorded elevation" : "Route elevation profile",
+        data: chartData,
+        borderColor: routeColor,
+        backgroundColor: fillColor,
+        borderWidth: 2,
+        pointRadius: 0,
+        fill: true,
+        tension: 0.25,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: items => items[0] ? `Distance: ${items[0].parsed.x.toFixed(2)} km` : "",
+            label: item => `Elevation: ${item.parsed.y.toFixed(0)} m`,
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          title: { display: true, text: "Distance (km)" },
+          ticks: {
+            callback: value => typeof value === 'number' ? `${value.toFixed(1)} km` : value,
+          }
+        },
+        y: {
+          title: { display: true, text: "Elevation (m)" },
+          ticks: { precision: 0 }
+        }
+      }
+    }
+  });
+}
+
+// ── Report Export ───────────────────────────────────────────────────────────
+function exportReport() {
+  const route = currentRoutes[navRouteIndex ?? 0];
+  const profile = route?.profile ? route.profile.toUpperCase() : "UNKNOWN";
+  const distance = document.getElementById("fin-dist").textContent;
+  const time = document.getElementById("fin-time").textContent;
+  const pace = document.getElementById("fin-pace").textContent;
+  const speed = document.getElementById("fin-speed").textContent;
+  const kcal = document.getElementById("fin-kcal").textContent;
+  const actualTrackDist = navTrackPoints.reduce((sum, point, idx) => {
+    if (idx === 0) return 0;
+    const prev = navTrackPoints[idx - 1];
+    return sum + haversineDistance(prev.lat, prev.lon, point.lat, point.lon);
+  }, 0);
+  const actualTrackKm = (actualTrackDist / 1000).toFixed(2);
+
+  const profileSummary = route ? getRouteProfileStats(route) : null;
+  const trackElevationText = navTrackPoints.length > 1
+    ? (() => {
+        let minEle = Infinity, maxEle = -Infinity, gain = 0, loss = 0;
+        for (let i = 0; i < navTrackPoints.length; i++) {
+          const ele = navTrackPoints[i].ele ?? 0;
+          minEle = Math.min(minEle, ele);
+          maxEle = Math.max(maxEle, ele);
+          if (i > 0) {
+            const prevEle = navTrackPoints[i - 1].ele ?? 0;
+            const diff = ele - prevEle;
+            if (diff > 0.5) gain += diff;
+            if (diff < -0.5) loss += Math.abs(diff);
+          }
+        }
+        return `Recorded elevation: ${Math.round(minEle)}m → ${Math.round(maxEle)}m\n` +
+               `Estimated track ascent: ${Math.round(gain)}m  descent: ${Math.round(loss)}m`;
+      })()
+    : "Recorded elevation data not available.";
+
+  const planText = profileSummary
+    ? `Route profile range: ${Math.round(profileSummary.minElev)}m → ${Math.round(profileSummary.maxElev)}m` +
+      `\nStart: ${Math.round(profileSummary.startElev)}m  End: ${Math.round(profileSummary.endElev)}m` +
+      `\nTotal ascent: ${Math.round(profileSummary.totalGain)}m  Total descent: ${Math.round(profileSummary.totalLoss)}m`
+    : "Route profile not available.";
+
+  const report = [
+    "Vienna Elevation Router Report",
+    `Profile: ${profile}`,
+    `Distance: ${distance}`,
+    `Time: ${time}`,
+    `Average pace: ${pace}`,
+    `Average speed: ${speed}`,
+    `Calories: ${kcal}`,
+    `Actual recorded track: ${actualTrackKm} km`,
+    `Recorded points: ${navTrackPoints.length}`,
+    "",
+    "Planned elevation summary:",
+    planText,
+    "",
+    "Actual track elevation summary:",
+    trackElevationText,
+    "",
+    "Report generated from finished navigation and GPS track data.",
+  ].join("\n");
+  downloadBlob(report, `run_report_${datestamp()}.txt`, "text/plain");
 }
 
 function downloadBlob(content, filename, mime) {
@@ -2503,11 +2793,6 @@ async function loadWeather() {
 
 // Load weather on startup + refresh when origin marker is set
 loadWeather();
-if (window.innerWidth <= 768) {
-  document.body.classList.add("widgets-collapsed");
-  const btn = document.getElementById("weather-toggle-btn");
-  if (btn) btn.textContent = "☀️ Show widgets";
-}
 
 function gradeMultiplier(g) {
   // Polynomial fit from Minetti 2002, clamped to ±30%
@@ -2815,7 +3100,7 @@ document.addEventListener("click", (e) => {
   <div style="background:#1a1a2e; color:white; border-radius:16px; padding:28px 32px;
     max-width:320px; width:90%; display:flex; flex-direction:column; gap:14px; text-align:center;">
     <div style="font-size:2rem">🏅</div>
-    <div style="font-size:1.2rem; font-weight:700; letter-spacing:1px">Run Complete!</div>
+    <div style="font-size:1.2rem; font-weight:700; letter-spacing:1px">Complete!</div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; text-align:left">
       <div><div style="font-size:1.3rem;font-weight:700" id="fin-dist">—</div><small style="opacity:.6">distance</small></div>
       <div><div style="font-size:1.3rem;font-weight:700" id="fin-time">—</div><small style="opacity:.6">time</small></div>
@@ -2823,11 +3108,9 @@ document.addEventListener("click", (e) => {
       <div><div style="font-size:1.3rem;font-weight:700" id="fin-speed">—</div><small style="opacity:.6">avg speed</small></div>
       <div style="grid-column:span 2"><div style="font-size:1.3rem;font-weight:700" id="fin-kcal">—</div><small style="opacity:.6">calories</small></div>
     </div>
-    <div style="display:flex; gap:10px; margin-top:4px">
-      <button onclick="exportGPX()" style="flex:1;padding:10px;background:#4a90d9;color:white;
-        border:none;border-radius:8px;font-weight:700;cursor:pointer">⬇ GPX</button>
-      <button onclick="exportJSON()" style="flex:1;padding:10px;background:#4caf50;color:white;
-        border:none;border-radius:8px;font-weight:700;cursor:pointer">⬇ JSON</button>
+    <div style="display:flex; gap:10px; margin-top:14px">
+      <button onclick="exportReport()" style="flex:1;padding:10px;background:#4caf50;color:white;
+        border:none;border-radius:8px;font-weight:700;cursor:pointer">⬇ Report</button>
     </div>
     <button onclick="stopNavigation()" style="padding:10px;background:rgba(255,255,255,0.1);
       color:white;border:none;border-radius:8px;cursor:pointer">✕ Close</button>
