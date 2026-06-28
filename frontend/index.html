@@ -977,7 +977,7 @@ body.dark-mode .card-extra-actions  { border-top-color: rgba(255,255,255,0.08); 
 body.dark-mode .card-extra-btn      { border-color: #2a3a52; color: #7a91b0; }
 body.dark-mode .card-extra-btn:active { background: rgba(255,255,255,0.05); }
 
-body.dark-mode #instructions { color: #667; }
+body.dark-mode #instructions { color: #9fb1cc; }
 
 body.dark-mode #chart-container h2 { color: #c9a84c; }
 
@@ -1517,6 +1517,12 @@ body.dark-mode #chart-container h2 { color: #c9a84c; }
 
   #results-panel.visible { transform: translateY(0); }
 
+  /* Empty-state instructions resting in the bottom sheet */
+  #instructions {
+    text-align: center;
+    padding: 4px 6px 8px;
+  }
+
   /* Drag handle pill */
   .sheet-handle {
     display: block;
@@ -1840,8 +1846,9 @@ body.dark-mode #chart-container h2 { color: #c9a84c; }
         <button id="search-close" onclick="closeSearchPanel()" title="Close" aria-label="Close search">✕</button>
       </div>
 
-      <!-- Results section: becomes bottom sheet on mobile -->
-      <div id="results-panel">
+      <!-- Results section: becomes bottom sheet on mobile.
+           Starts "visible" so the empty-state instructions rest at the bottom. -->
+      <div id="results-panel" class="visible">
         <div class="sheet-handle" onclick="toggleResultsSheet()"></div>
 
         <!-- Route cards will be inserted here dynamically -->
