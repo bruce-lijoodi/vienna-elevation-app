@@ -728,16 +728,28 @@
         min-width: 80%;
         flex-shrink: 0;
         scroll-snap-align: start;
-        padding: 12px 14px;
+        padding: 8px 10px;
+      }
+      .route-card h3 {
+        font-size: 0.85rem;
+        margin-bottom: 4px;
       }
 
       /* Stats as 2×2 grid — much more scannable */
       .route-card .stats {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 5px 10px;
-        font-size: 0.8rem;
+        gap: 3px 8px;
+        font-size: 0.75rem;
       }
+
+      /* Tighter navigate button */
+      .nav-btn {
+        margin-top: 6px;
+        padding: 5px 10px;
+        font-size: 0.78rem;
+      }
+      .card-actions { margin-top: 0; gap: 6px; }
 
       /* Elevation chart + refine hidden by default on mobile */
       #chart-container { display: none; }
@@ -748,17 +760,17 @@
       .card-extra-actions {
         display: flex;
         gap: 6px;
-        margin-top: 10px;
-        padding-top: 10px;
+        margin-top: 7px;
+        padding-top: 7px;
         border-top: 1px solid rgba(0,0,0,0.08);
       }
       .card-extra-btn {
         flex: 1;
         background: none;
         border: 1px solid rgba(0,0,0,0.12);
-        border-radius: 8px;
-        padding: 6px 4px;
-        font-size: 0.73rem;
+        border-radius: 7px;
+        padding: 5px 4px;
+        font-size: 0.7rem;
         cursor: pointer;
         color: #555;
         font-family: inherit;
