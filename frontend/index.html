@@ -704,15 +704,54 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
-    }
 
-    /* Extra-small phones (≤ 420px) */
-    @media (max-width: 420px) {
-      /* Route card stats in a row to save vertical space */
-      .route-card .stats {
+      /* ── Route cards: horizontal swipe (Google Maps style) ── */
+      #route-cards {
+        display: flex;
         flex-direction: row;
+        gap: 12px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding: 4px 4px 10px;
+        scrollbar-width: none;
+        /* negative margin so cards bleed to container edges */
+        margin: 0 -4px;
+      }
+      #route-cards::-webkit-scrollbar { display: none; }
+
+      /* Each card ≈80% wide — right edge of next card peeks through */
+      .route-card {
+        min-width: 80%;
+        flex-shrink: 0;
+        scroll-snap-align: start;
+        padding: 12px 14px;
+      }
+
+      /* Stats as 2×2 grid — much more scannable */
+      .route-card .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 5px 10px;
+        font-size: 0.8rem;
+      }
+
+      /* Tighten the refine row so it fits in one line */
+      .card-refine {
         flex-wrap: wrap;
-        gap: 6px;
+        gap: 5px;
+        margin-top: 8px;
+        padding-top: 8px;
+      }
+
+      /* Small swipe hint label below cards */
+      #route-cards-hint {
+        display: block;
+        text-align: center;
+        font-size: 0.7rem;
+        color: #7a91b0;
+        margin-top: 2px;
+        letter-spacing: 0.3px;
       }
     }
 
@@ -1629,6 +1668,7 @@ body.dark-mode #chart-container h2 { color: #c9a84c; }
 
         <!-- Route cards will be inserted here dynamically -->
         <div id="route-cards"></div>
+        <span id="route-cards-hint" style="display:none">← swipe to see all routes →</span>
 
         <!-- Elevation chart will appear here after routes load -->
         <div id="chart-container" style="display:none;">
@@ -2505,6 +2545,9 @@ function renderRouteCards(routes) {
     container.appendChild(card);
   });
 
+  // Show swipe hint on mobile when there are multiple cards
+  const hint = document.getElementById("route-cards-hint");
+  if (hint) hint.style.display = (window.innerWidth <= 768 && routes.length > 1) ? "block" : "none";
 }
     // -------------------------------------------------------------------------
     // Select a route — highlight it on the map and update the elevation chart
