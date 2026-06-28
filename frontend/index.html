@@ -435,29 +435,6 @@
     .nav-stat span { font-size: 1.9rem; font-weight: bold; line-height: 1; }
     .nav-stat small { font-size: 0.72rem; opacity: 0.65; margin-top: 3px; }
 
-    .pick-btn {
-      font-size: 0.78rem;
-      padding: 4px 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      background: #f5f5f5;
-      cursor: pointer;
-      margin-top: 4px;
-      width: 100%;
-      transition: all 0.15s ease;
-    }
-
-    .pick-btn:hover {
-      background: #e8f4f5;
-      border-color: #4a9fa8;
-    }
-
-    .pick-btn.active-pick {
-      background: #d0f0f4;
-      border-color: #0a8a96;
-      color: #0a5c63;
-      font-weight: 600;
-    }
 
     .card-actions {
       display: flex;
@@ -1173,7 +1150,6 @@
         <label>📍 Origin</label>
         <input type="text" id="origin-input" placeholder="e.g. Stephansdom, Vienna" />
         <div id="origin-suggestions" class="suggestions"></div>
-        <button id="btn-set-origin" class="pick-btn">🖱️ Pick on map</button>
         <button id="origin-loc-btn" class="location-btn" onclick="useMyLocation('origin')">📡 Use my current location</button>
       </div>
       
@@ -1183,7 +1159,6 @@
         <label>🏁 Destination</label>
         <input type="text" id="dest-input" placeholder="e.g. Grinzing, Vienna" />
         <div id="dest-suggestions" class="suggestions"></div>
-        <button id="btn-set-dest" class="pick-btn">🖱️ Pick on map</button>
         <button id="dest-loc-btn" class="location-btn" onclick="useMyLocation('destination')">📡 Use my current location</button>
       </div>
 
@@ -1511,68 +1486,6 @@ function toggleContours() {
 }
 
     // -------------------------------------------------------------------------
-    // Map click handler — set origin or destination by clicking the map
-    // -------------------------------------------------------------------------
-
-let clickMode = null; // null = inactive; map ignores clicks
-
-map.on("click", function (e) {
-  if (!clickMode) return;
-
-  const lat = e.latlng.lat.toFixed(6);
-  const lon = e.latlng.lng.toFixed(6);
-
-  if (clickMode === "origin") {
-    document.getElementById("origin-input").value = `${lat}, ${lon}`;
-    if (originMarker) map.removeLayer(originMarker);
-    originMarker = L.marker([lat, lon], {
-      icon: L.divIcon({ className: "", html: "🟢", iconSize: [24, 24] })
-    }).addTo(map).bindPopup("Origin").openPopup();
-    loadWeather(); // refresh weather for new origin location
-    updateSun()
-
-  } else if (clickMode === "destination") {
-    document.getElementById("dest-input").value = `${lat}, ${lon}`;
-    if (destMarker) map.removeLayer(destMarker);
-    destMarker = L.marker([lat, lon], {
-      icon: L.divIcon({ className: "", html: "🔴", iconSize: [24, 24] })
-    }).addTo(map).bindPopup("Destination").openPopup();
-  }
-
-  clickMode = null;
-  setActiveBtn(null);
-  map.getContainer().style.cursor = "";
-});
-
-// Highlight whichever "Pick" button is active
-function setActiveBtn(mode) {
-  document.getElementById("btn-set-origin").classList.toggle("active-pick", mode === "origin");
-  document.getElementById("btn-set-dest").classList.toggle("active-pick", mode === "destination");
-}
-
-document.getElementById("btn-set-origin").addEventListener("click", function () {
-  if (clickMode === "origin") {
-    clickMode = null;
-    setActiveBtn(null);
-    map.getContainer().style.cursor = "";
-  } else {
-    clickMode = "origin";
-    setActiveBtn("origin");
-    map.getContainer().style.cursor = "crosshair";
-  }
-});
-
-document.getElementById("btn-set-dest").addEventListener("click", function () {
-  if (clickMode === "destination") {
-    clickMode = null;
-    setActiveBtn(null);
-    map.getContainer().style.cursor = "";
-  } else {
-    clickMode = "destination";
-    setActiveBtn("destination");
-    map.getContainer().style.cursor = "crosshair";
-  }
-});
 
     // -------------------------------------------------------------------------
     // Real-time location — shows the user's current position on the map
