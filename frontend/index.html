@@ -256,9 +256,16 @@
     .route-card.balanced  { background: #fdf6e3; border-color: #e6a817; } /* Habsburg gold */
     .route-card.steepest  { background: #fdecea; border-color: #d93025; } /* Austrian red */
 
-    /* Highlight the selected route */
-    .route-card.active {
-      box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.45);
+    /* Highlight the selected route — a bold ring + glow in that route's own
+       colour (green / gold / red) so it stands out against the dark card. */
+    .route-card.flattest.active {
+      box-shadow: 0 0 0 3px #1aab68, 0 0 14px 3px rgba(26, 171, 104, 0.55);
+    }
+    .route-card.balanced.active {
+      box-shadow: 0 0 0 3px #e6a817, 0 0 14px 3px rgba(230, 168, 23, 0.55);
+    }
+    .route-card.steepest.active {
+      box-shadow: 0 0 0 3px #d93025, 0 0 14px 3px rgba(217, 48, 37, 0.55);
     }
 
     .route-card h3 {
