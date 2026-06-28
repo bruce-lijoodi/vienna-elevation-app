@@ -2246,14 +2246,14 @@ function toggleContours() {
             document.getElementById("origin-input").value = "My current location";
             if (originMarker) map.removeLayer(originMarker);
             originMarker = L.marker([lat, lon], {
-              icon: L.divIcon({ className: "", html: "🟢", iconSize: [24, 24] })
+              icon: L.divIcon({ className: "", html: "🔴", iconSize: [24, 24] })
             }).addTo(map).bindPopup("Origin — your location").openPopup();
           } else {
             destCoords = { lat, lon };
             document.getElementById("dest-input").value = "My current location";
             if (destMarker) map.removeLayer(destMarker);
             destMarker = L.marker([lat, lon], {
-              icon: L.divIcon({ className: "", html: "🔴", iconSize: [24, 24] })
+              icon: L.divIcon({ className: "", html: "🟢", iconSize: [24, 24] })
             }).addTo(map).bindPopup("Destination — your location").openPopup();
           }
 
@@ -2334,12 +2334,12 @@ function toggleContours() {
             if (markerId === "origin") {
               if (originMarker) map.removeLayer(originMarker);
               originMarker = L.marker([lat, lon], {
-                icon: L.divIcon({ className: "", html: "🟢", iconSize: [24, 24] })
+                icon: L.divIcon({ className: "", html: "🔴", iconSize: [24, 24] })
               }).addTo(map).bindPopup("Origin").openPopup();
             } else {
               if (destMarker) map.removeLayer(destMarker);
               destMarker = L.marker([lat, lon], {
-                icon: L.divIcon({ className: "", html: "🔴", iconSize: [24, 24] })
+                icon: L.divIcon({ className: "", html: "🟢", iconSize: [24, 24] })
               }).addTo(map).bindPopup("Destination").openPopup();
             }
           };
