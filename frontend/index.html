@@ -1469,6 +1469,34 @@ body.dark-mode #chart-container h2 { color: #c9a84c; }
   /* When the card is open, the FAB gives way to the card's own ✕ button */
   #app.search-open #search-fab { display: none; }
 
+  /* ── Top-right vertical stack: theme, SunCal, Lap (in that order) ── */
+  #map-fabs-tr {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 999;
+    pointer-events: none;
+  }
+  #map-fabs-tr > * { pointer-events: auto; }
+
+  /* Children flow inside the stack instead of anchoring to their own corners */
+  #map-fabs-tr #map-theme-btn,
+  #map-fabs-tr #weather-widget,
+  #map-fabs-tr #lap-fab,
+  #map-fabs-tr #lap-fab-panel {
+    position: static;
+    top: auto; right: auto; bottom: auto; left: auto;
+  }
+
+  /* SunCal removed from the mobile stack (still shown on desktop) */
+  #map-fabs-tr #sun-indicator { display: none !important; }
+
+  /* Lap chip popup drops in just under the Lap button, right-aligned */
+  #map-fabs-tr #lap-fab-panel.open { animation: none; }
   /* Close (✕) button on the search card — mobile only */
   #search-close {
     display: flex;
@@ -1867,62 +1895,66 @@ body.dark-mode #chart-container h2 { color: #c9a84c; }
 
     </div>
 
-        <!-- Weather Widget — floating on map -->
-    <div id="weather-widget">
-      <div class="weather-top">
-        <div>
-          <div class="weather-temp" id="w-temp">—</div>
-          <div class="weather-desc" id="w-desc">—</div>
-        </div>
-        <div style="font-size:2rem" id="w-icon">—</div>
-      </div>
-      <div class="weather-details">
-        <span id="w-wind">💨 —</span>
-        <span id="w-humidity">💧 —</span>
-        <span id="w-feels">🌡️ —</span>
-      </div>
-      <div class="weather-verdict" id="w-verdict"></div>
-      <button class="weather-refresh" onclick="loadWeather()">↻ refresh</button>
-    </div>
-
-
-    <!-- Sun Indicator -->
-<div id="sun-indicator">
-  <div class="sun-phase" id="sun-phase">—</div>
-  <div id="sun-compass">
-    <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- compass ring -->
-      <circle cx="26" cy="26" r="24" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
-      <!-- N/S/E/W labels -->
-      <text x="26" y="7"  text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="5">N</text>
-      <text x="26" y="49" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="5">S</text>
-      <text x="48" y="28" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="5">E</text>
-      <text x="4"  y="28" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="5">W</text>
-      <!-- sun arrow — rotates via JS -->
-      <g id="sun-arrow" transform="rotate(0, 26, 26)">
-        <circle cx="26" cy="11" r="5" fill="#ffd54f" opacity="0.95"/>
-        <line x1="26" y1="16" x2="26" y2="26" stroke="#ffd54f" stroke-width="1.5" opacity="0.6"/>
-      </g>
-    </svg>
-  </div>
-  <div class="sun-label" id="sun-detail">—</div>
-</div>
-
-
-    <!-- Dark map toggle button -->
-    <button id="map-theme-btn" onclick="toggleMapTheme()" title="Toggle dark map">🌙</button>
-
-    <!-- Mobile-only: search toggle — opens the route search card -->
+    <!-- Mobile-only: search toggle — opens the route search card (top-left, below zoom) -->
     <button id="search-fab" onclick="toggleSearchPanel()" aria-label="Plan a route">🔍 Plan route</button>
 
-    <!-- Mobile-only: Take a Lap floating button -->
-    <button id="lap-fab" onclick="toggleLapFab()" title="Take a Lap">🔁 Lap</button>
-    <div id="lap-fab-panel">
-      <button class="lap-chip" onclick="getLoopRoutes(2); closeLapFab()">2 km</button>
-      <button class="lap-chip" onclick="getLoopRoutes(5); closeLapFab()">5 km</button>
-      <button class="lap-chip" onclick="getLoopRoutes(10); closeLapFab()">10 km</button>
-      <button class="lap-chip" onclick="getLoopRoutes(20); closeLapFab()">20 km</button>
-      <button class="lap-chip" onclick="getLoopRoutes(30); closeLapFab()">30 km</button>
+    <!-- Floating map controls — a vertical stack at the top-right on mobile.
+         On desktop this is display:contents, so each child keeps its own position. -->
+    <div id="map-fabs-tr">
+
+      <!-- Dark map toggle button -->
+      <button id="map-theme-btn" onclick="toggleMapTheme()" title="Toggle dark map">🌙</button>
+
+      <!-- Weather Widget — compact 39°C pill on mobile (second in the stack) -->
+      <div id="weather-widget">
+        <div class="weather-top">
+          <div>
+            <div class="weather-temp" id="w-temp">—</div>
+            <div class="weather-desc" id="w-desc">—</div>
+          </div>
+          <div style="font-size:2rem" id="w-icon">—</div>
+        </div>
+        <div class="weather-details">
+          <span id="w-wind">💨 —</span>
+          <span id="w-humidity">💧 —</span>
+          <span id="w-feels">🌡️ —</span>
+        </div>
+        <div class="weather-verdict" id="w-verdict"></div>
+        <button class="weather-refresh" onclick="loadWeather()">↻ refresh</button>
+      </div>
+
+      <!-- Sun Indicator (SunCal) — desktop only; hidden on mobile -->
+      <div id="sun-indicator">
+        <div class="sun-phase" id="sun-phase">—</div>
+        <div id="sun-compass">
+          <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- compass ring -->
+            <circle cx="26" cy="26" r="24" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+            <!-- N/S/E/W labels -->
+            <text x="26" y="7"  text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="5">N</text>
+            <text x="26" y="49" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="5">S</text>
+            <text x="48" y="28" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="5">E</text>
+            <text x="4"  y="28" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="5">W</text>
+            <!-- sun arrow — rotates via JS -->
+            <g id="sun-arrow" transform="rotate(0, 26, 26)">
+              <circle cx="26" cy="11" r="5" fill="#ffd54f" opacity="0.95"/>
+              <line x1="26" y1="16" x2="26" y2="26" stroke="#ffd54f" stroke-width="1.5" opacity="0.6"/>
+            </g>
+          </svg>
+        </div>
+        <div class="sun-label" id="sun-detail">—</div>
+      </div>
+
+      <!-- Mobile-only: Take a Lap floating button -->
+      <button id="lap-fab" onclick="toggleLapFab()" title="Take a Lap">🔁 Lap</button>
+      <div id="lap-fab-panel">
+        <button class="lap-chip" onclick="getLoopRoutes(2); closeLapFab()">2 km</button>
+        <button class="lap-chip" onclick="getLoopRoutes(5); closeLapFab()">5 km</button>
+        <button class="lap-chip" onclick="getLoopRoutes(10); closeLapFab()">10 km</button>
+        <button class="lap-chip" onclick="getLoopRoutes(20); closeLapFab()">20 km</button>
+        <button class="lap-chip" onclick="getLoopRoutes(30); closeLapFab()">30 km</button>
+      </div>
+
     </div>
 
     <!-- Map -->
