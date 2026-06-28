@@ -809,6 +809,34 @@
 
 
 /* -----------------------------------------------------------------------
+   Map theme toggle button
+----------------------------------------------------------------------- */
+#map-theme-btn {
+  position: absolute;
+  bottom: 32px;
+  left: 12px;
+  z-index: 999;
+  background: rgba(26, 26, 46, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+#map-theme-btn:hover { background: rgba(201,168,76,0.85); }
+#map-theme-btn.dark  { background: rgba(201,168,76,0.9); color: #1a1a2e; border-color: transparent; }
+
+@media (max-width: 640px) {
+  #map-theme-btn { bottom: 100px; left: 12px; }
+}
+
+/* -----------------------------------------------------------------------
    Sun Indicator
 ----------------------------------------------------------------------- */
 #sun-indicator {
@@ -1350,6 +1378,9 @@
 </div>
 
 
+    <!-- Dark map toggle button -->
+    <button id="map-theme-btn" onclick="toggleMapTheme()" title="Toggle dark map">🌙</button>
+
     <!-- Map -->
     <div id="map"></div>
 
@@ -1421,10 +1452,33 @@
     // Create the Leaflet map centered on Vienna's inner city
     const map = L.map("map").setView([48.2082, 16.3738], 11);
 
-    // Add CartoDB tiles as the base layer (no referer restriction)
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      attribution: "© OpenStreetMap contributors © CARTO",
-    }).addTo(map);
+    // Tile layers — light (default) and dark
+    const TILE_LIGHT = L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+      { attribution: "© OpenStreetMap contributors © CARTO" }
+    );
+    const TILE_DARK = L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      { attribution: "© OpenStreetMap contributors © CARTO" }
+    );
+    let darkMapActive = false;
+    TILE_LIGHT.addTo(map);
+
+    function toggleMapTheme() {
+      const btn = document.getElementById("map-theme-btn");
+      if (darkMapActive) {
+        map.removeLayer(TILE_DARK);
+        TILE_LIGHT.addTo(map);
+        btn.textContent = "🌙";
+        btn.classList.remove("dark");
+      } else {
+        map.removeLayer(TILE_LIGHT);
+        TILE_DARK.addTo(map);
+        btn.textContent = "☀️";
+        btn.classList.add("dark");
+      }
+      darkMapActive = !darkMapActive;
+    }
 
     
 
