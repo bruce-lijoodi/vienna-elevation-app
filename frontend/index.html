@@ -709,20 +709,25 @@
       }
 
       /* ── Route cards: horizontal swipe (Google Maps style) ── */
+      #results-panel { overflow-x: hidden; }
+
       #route-cards {
         display: flex;
         flex-direction: row;
         gap: 0;
+        width: 100%;
         overflow-x: auto;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
         padding: 4px 0 10px;
         scrollbar-width: none;
+        box-sizing: border-box;
       }
       #route-cards::-webkit-scrollbar { display: none; }
 
-      /* Each card fills the full panel width — swipe to see the next */
+      /* Each card fills exactly the panel width — swipe to see the next */
       .route-card {
+        width: 100%;
         min-width: 100%;
         flex-shrink: 0;
         scroll-snap-align: start;
