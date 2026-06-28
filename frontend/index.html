@@ -859,7 +859,7 @@
 }
 
 @media (max-width: 768px) {
-  #sun-indicator { display: none !important; }  /* добавь эту строку */
+  #sun-indicator { display: none !important; }
 }
 
 
@@ -1084,11 +1084,118 @@
 }
 
 @media (max-width: 768px) {
-
   #weather-widget,
   #sun-indicator {
     right: 8px;
   }
+}
+
+/* -----------------------------------------------------------------------
+   Desktop: search-panel and results-panel are invisible wrappers
+----------------------------------------------------------------------- */
+#search-panel,
+#results-panel { display: contents; }
+.sheet-handle  { display: none; }
+
+/* -----------------------------------------------------------------------
+   Mobile layout — Google Maps style
+----------------------------------------------------------------------- */
+@media (max-width: 640px) {
+
+  /* Hide header — saves precious screen space */
+  header { display: none; }
+
+  /* App fills the full viewport */
+  #app {
+    height: 100dvh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Map goes fully behind everything */
+  #map {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    height: 100dvh !important;
+  }
+
+  /* Sidebar becomes a transparent fixed overlay container */
+  #sidebar {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    gap: 0;
+    overflow: visible;
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  /* Search card floats at the top — like Google Maps search bar */
+  #search-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: all;
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    background: #faf8f4;
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.22);
+  }
+
+  /* Hide the "Set Your Route" heading and contours toggle on mobile */
+  #search-panel > h2,
+  #search-panel > .location-btn:first-of-type { display: none; }
+
+  /* Results bottom sheet — slides up when routes are ready */
+  #results-panel {
+    display: flex;
+    flex-direction: column;
+    pointer-events: all;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #faf8f4;
+    border-radius: 20px 20px 0 0;
+    padding: 0 16px 40px;
+    max-height: 72vh;
+    overflow-y: auto;
+    box-shadow: 0 -4px 30px rgba(0,0,0,0.18);
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #results-panel.visible { transform: translateY(0); }
+
+  /* Drag handle pill */
+  .sheet-handle {
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: #ccc;
+    border-radius: 2px;
+    margin: 12px auto 8px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  /* Weather widget: move to bottom-right so it doesn't clash with search card */
+  #weather-widget {
+    top: auto;
+    bottom: 16px;
+    right: 12px;
+  }
+
+  /* Sun indicator already hidden at 768px */
 }
 
   </style>
@@ -1140,61 +1247,64 @@
 
     <!-- Sidebar -->
     <div id="sidebar">
-      <h2>Set Your Route</h2>
 
-      <button class="location-btn" onclick="toggleContours()">〰️ Toggle contours</button>
+      <!-- Search section: becomes floating top card on mobile -->
+      <div id="search-panel">
+        <h2>Set Your Route</h2>
+        <button class="location-btn" onclick="toggleContours()">〰️ Toggle contours</button>
 
-
-      <!-- Origin input -->
-      <div class="input-group">
-        <label>📍 Origin</label>
-        <input type="text" id="origin-input" placeholder="e.g. Stephansdom, Vienna" />
-        <div id="origin-suggestions" class="suggestions"></div>
-        <button id="origin-loc-btn" class="location-btn" onclick="useMyLocation('origin')">📡 Use my current location</button>
-      </div>
-      
-
-      <!-- Destination input -->
-      <div class="input-group">
-        <label>🏁 Destination</label>
-        <input type="text" id="dest-input" placeholder="e.g. Grinzing, Vienna" />
-        <div id="dest-suggestions" class="suggestions"></div>
-        <button id="dest-loc-btn" class="location-btn" onclick="useMyLocation('destination')">📡 Use my current location</button>
-      </div>
-
-
-
-      <!-- Get Routes button -->
-      <button id="get-routes-btn" onclick="getRoutes()">Get Routes</button>
-
-      <!-- Take a Lap button + distance chips -->
-      <button id="lap-btn" onclick="takeLap()">🔁 Take a Lap</button>
-      <div id="lap-chips">
-        <button class="lap-chip" onclick="getLoopRoutes(2)">2 km</button>
-        <button class="lap-chip" onclick="getLoopRoutes(5)">5 km</button>
-        <button class="lap-chip" onclick="getLoopRoutes(10)">10 km</button>
-        <button class="lap-chip" onclick="getLoopRoutes(20)">20 km</button>
-        <button class="lap-chip" onclick="getLoopRoutes(30)">30 km</button>
-      </div>
-
-      <!-- Instructions shown before any routes are loaded -->
-      <p id="instructions">
-        Enter coordinates above or click on the map to set your origin and destination.
-        You will get 3 routes ranked from flattest to steepest.
-      </p>
-
-      <!-- Route cards will be inserted here dynamically -->
-      <div id="route-cards"></div>
-
-      <!-- Elevation chart will appear here after routes load -->
-      <div id="chart-container" style="display:none;">
-        <div class="chart-header">
-          <h2>📈 Elevation Profile</h2>
-          <button class="expand-profile-btn" onclick="openProfileModal()">⤢ Expand</button>
+        <!-- Origin input -->
+        <div class="input-group">
+          <label>📍 Origin</label>
+          <input type="text" id="origin-input" placeholder="e.g. Stephansdom, Vienna" />
+          <div id="origin-suggestions" class="suggestions"></div>
+          <button id="origin-loc-btn" class="location-btn" onclick="useMyLocation('origin')">📡 Use my current location</button>
         </div>
-        <canvas id="elevation-chart"></canvas>
+
+        <!-- Destination input -->
+        <div class="input-group">
+          <label>🏁 Destination</label>
+          <input type="text" id="dest-input" placeholder="e.g. Grinzing, Vienna" />
+          <div id="dest-suggestions" class="suggestions"></div>
+          <button id="dest-loc-btn" class="location-btn" onclick="useMyLocation('destination')">📡 Use my current location</button>
+        </div>
+
+        <!-- Get Routes button -->
+        <button id="get-routes-btn" onclick="getRoutes()">Get Routes</button>
+
+        <!-- Take a Lap button + distance chips -->
+        <button id="lap-btn" onclick="takeLap()">🔁 Take a Lap</button>
+        <div id="lap-chips">
+          <button class="lap-chip" onclick="getLoopRoutes(2)">2 km</button>
+          <button class="lap-chip" onclick="getLoopRoutes(5)">5 km</button>
+          <button class="lap-chip" onclick="getLoopRoutes(10)">10 km</button>
+          <button class="lap-chip" onclick="getLoopRoutes(20)">20 km</button>
+          <button class="lap-chip" onclick="getLoopRoutes(30)">30 km</button>
+        </div>
       </div>
 
+      <!-- Results section: becomes bottom sheet on mobile -->
+      <div id="results-panel">
+        <div class="sheet-handle" onclick="toggleResultsSheet()"></div>
+
+        <!-- Instructions shown before any routes are loaded -->
+        <p id="instructions">
+          Search for an address above to set your origin and destination.
+          You will get 3 routes ranked from flattest to steepest.
+        </p>
+
+        <!-- Route cards will be inserted here dynamically -->
+        <div id="route-cards"></div>
+
+        <!-- Elevation chart will appear here after routes load -->
+        <div id="chart-container" style="display:none;">
+          <div class="chart-header">
+            <h2>📈 Elevation Profile</h2>
+            <button class="expand-profile-btn" onclick="openProfileModal()">⤢ Expand</button>
+          </div>
+          <canvas id="elevation-chart"></canvas>
+        </div>
+      </div>
 
     </div>
 
@@ -1939,8 +2049,17 @@ function downloadGPX(routeIndex) {
   a.click();
 }
 
+function toggleResultsSheet() {
+  document.getElementById("results-panel").classList.toggle("visible");
+}
+
+function showResultsSheet() {
+  document.getElementById("results-panel").classList.add("visible");
+}
+
 function renderRouteCards(routes) {
   document.getElementById("instructions").style.display = "none";
+  showResultsSheet();
   const container = document.getElementById("route-cards");
   container.innerHTML = "";
 
