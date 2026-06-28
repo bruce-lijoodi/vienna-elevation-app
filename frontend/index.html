@@ -26,6 +26,10 @@
       box-sizing: border-box;
     }
 
+    html, body {
+      overscroll-behavior: none; /* prevent iOS rubber-band scroll shifting the page */
+    }
+
     body {
       font-family: 'Inter', 'Segoe UI', sans-serif;
       background: #f0ede6;
@@ -1004,6 +1008,15 @@ body.dark-mode #chart-container h2 { color: #c9a84c; }
 }
 #map-theme-btn:hover { background: rgba(201,168,76,0.85); }
 #map-theme-btn.dark  { background: rgba(201,168,76,0.9); color: #1a1a2e; border-color: transparent; }
+
+@media (max-width: 768px) {
+  /* Fix floating map buttons to the viewport so map drags can't shift them */
+  #map-theme-btn,
+  #lap-fab,
+  #lap-fab-panel {
+    position: fixed;
+  }
+}
 
 @media (max-width: 640px) {
   #map-theme-btn { bottom: 100px; left: 12px; }
