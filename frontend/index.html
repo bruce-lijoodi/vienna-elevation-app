@@ -2415,7 +2415,7 @@ function toggleContours() {
 
         drawRoutes(currentRoutes);
         renderRouteCards(currentRoutes);
-        selectRoute(0);
+        selectRoute(0, true); // fit handled by group fitBounds below
         // Fit after the sheet is visible so offsetHeight is correct
         const group = L.featureGroup(routeLayers);
         fitMapToBounds(group.getBounds());
@@ -2469,7 +2469,7 @@ function toggleContours() {
 
         drawRoutes(currentRoutes);
         renderRouteCards(currentRoutes);
-        selectRoute(0);
+        selectRoute(0, true); // fit handled by group fitBounds below
         const group = L.featureGroup(routeLayers);
         fitMapToBounds(group.getBounds());
 
@@ -2570,14 +2570,11 @@ function toggleContours() {
 
     function fitMapToBounds(bounds, maxZoom) {
       const isMobile = window.innerWidth <= 768;
-      // On mobile the results sheet covers ~200px from the map bottom,
-      // so push the bottom padding in by that amount so routes stay visible.
-      const mapEl = document.getElementById("map");
-      const bottomPad = isMobile ? Math.round(mapEl.offsetHeight * 0.48) : 40;
-      const opts = {
-        paddingTopLeft:     [24, 24],
-        paddingBottomRight: [24, bottomPad],
-      };
+      // On mobile: generous uniform padding so Leaflet zooms out enough to
+      // keep origin + destination above the results sheet. No maxZoom so it
+      // always zooms out as far as needed.
+      const pad = isMobile ? 60 : 40;
+      const opts = { padding: [pad, pad] };
       if (maxZoom) opts.maxZoom = maxZoom;
       map.fitBounds(bounds, opts);
     }
@@ -2710,7 +2707,7 @@ function renderRouteCards(routes) {
     // Select a route — highlight it on the map and update the elevation chart
     // -------------------------------------------------------------------------
 
-    function selectRoute(index) {
+    function selectRoute(index, skipFit = false) {
       if (!currentRoutes || !currentRoutes[index]) return;
       selectedRouteIndex = index;
 
@@ -2722,8 +2719,10 @@ function renderRouteCards(routes) {
           });
           if (i === index) {
             layer.bringToFront();
-            // Pan/zoom so the full route is visible
-            try { fitMapToBounds(layer.getBounds(), 16); } catch(e) {}
+            // Only fit when user explicitly taps a card, not on initial load
+            if (!skipFit) {
+              try { fitMapToBounds(layer.getBounds(), 16); } catch(e) {}
+            }
           }
         }
       });
