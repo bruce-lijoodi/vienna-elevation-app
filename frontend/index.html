@@ -248,9 +248,9 @@
     }
 
     /* Each profile has its own colour — Vienna themed */
-    .route-card.flattest  { background: #e8f3ec; border-color: #2d6a4f; } /* Wienerwald green */
-    .route-card.balanced  { background: #fdf6e3; border-color: #c9a84c; } /* Habsburg gold */
-    .route-card.steepest  { background: #fdecea; border-color: #c0392b; } /* Austrian red */
+    .route-card.flattest  { background: #e6f9f0; border-color: #1aab68; } /* Wienerwald green */
+    .route-card.balanced  { background: #fdf6e3; border-color: #e6a817; } /* Habsburg gold */
+    .route-card.steepest  { background: #fdecea; border-color: #d93025; } /* Austrian red */
 
     /* Highlight the selected route */
     .route-card.active {
@@ -1409,9 +1409,9 @@
 
     // Colours for each route profile on the map
     const PROFILE_COLORS = {
-      flattest: "#2d6a4f",  // Wienerwald green
-      balanced: "#c9a84c",  // Habsburg gold
-      steepest: "#c0392b",  // Austrian red
+      flattest: "#1aab68",  // Wienerwald green — vivid, readable on any map tile
+      balanced: "#e6a817",  // Habsburg gold/amber — bright enough to stand out
+      steepest: "#d93025",  // Austrian red — saturated, high contrast
     };
 
     // -------------------------------------------------------------------------
@@ -1961,11 +1961,20 @@ function toggleContours() {
           lon + offsets[index],
         ]);
 
-        // Draw the route as a coloured polyline on the map
+        // White halo drawn first so it sits behind the coloured line
+        const isActive = index === selectedRouteIndex;
+        const halo = L.polyline(offsetLatLngs, {
+          color: "white",
+          weight: isActive ? 10 : 7,
+          opacity: isActive ? 0.9 : 0.55,
+        }).addTo(map);
+        routeDecorations.push(halo);
+
+        // Coloured route line on top
         const layer = L.polyline(offsetLatLngs, {
           color: PROFILE_COLORS[route.profile],
-          weight: index === selectedRouteIndex ? 6 : 4,
-          opacity: index === selectedRouteIndex ? 1.0 : 0.5,
+          weight: isActive ? 6 : 4,
+          opacity: isActive ? 1.0 : 0.65,
         }).addTo(map);
 
         // Show route info when the user clicks on the line
