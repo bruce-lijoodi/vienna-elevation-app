@@ -1539,7 +1539,7 @@ body.dark-mode #chart-container h2 { color: #c9a84c; }
       { attribution: "© OpenStreetMap contributors © CARTO" }
     ).addTo(map);
 
-    let darkMapActive = false;
+    let darkMapActive = true;
 
     function toggleMapTheme() {
       const btn = document.getElementById("map-theme-btn");
@@ -1549,6 +1549,12 @@ body.dark-mode #chart-container h2 { color: #c9a84c; }
       btn.textContent = darkMapActive ? "☀️" : "🌙";
       btn.classList.toggle("dark", darkMapActive);
     }
+
+    // Apply dark mode on load
+    document.getElementById("map").classList.add("dark-tiles");
+    document.body.classList.add("dark-mode");
+    document.getElementById("map-theme-btn").textContent = "☀️";
+    document.getElementById("map-theme-btn").classList.add("dark");
 
     
 
