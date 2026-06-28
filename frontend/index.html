@@ -1398,8 +1398,14 @@
     // Configuration
     // -------------------------------------------------------------------------
 
-    // The URL of our FastAPI backend
-    const API_URL = "";
+    // The URL of our FastAPI backend.
+    // Empty string = same origin (works on Vercel and when served via uvicorn).
+    // Falls back to localhost:8000 if the page is opened directly from the filesystem
+    // or from a different dev server (e.g. VS Code Live Server on port 5500).
+    const API_URL = (window.location.protocol === "file:" ||
+                     (window.location.hostname === "localhost" && window.location.port !== "8000"))
+      ? "http://localhost:8000"
+      : "";
 
     // Colours for each route profile on the map
     const PROFILE_COLORS = {
