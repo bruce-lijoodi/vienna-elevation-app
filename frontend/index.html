@@ -712,23 +712,22 @@
       #route-cards {
         display: flex;
         flex-direction: row;
-        gap: 12px;
+        gap: 0;
         overflow-x: auto;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
-        padding: 4px 4px 10px;
+        padding: 4px 0 10px;
         scrollbar-width: none;
-        /* negative margin so cards bleed to container edges */
-        margin: 0 -4px;
       }
       #route-cards::-webkit-scrollbar { display: none; }
 
-      /* Each card ≈80% wide — right edge of next card peeks through */
+      /* Each card fills the full panel width — swipe to see the next */
       .route-card {
-        min-width: 80%;
+        min-width: 100%;
         flex-shrink: 0;
         scroll-snap-align: start;
         padding: 8px 10px;
+        box-sizing: border-box;
       }
       .route-card h3 {
         font-size: 0.85rem;
