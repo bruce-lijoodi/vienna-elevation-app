@@ -809,6 +809,14 @@
 
 
 /* -----------------------------------------------------------------------
+   Dark map — CSS filter on tiles gives Google Maps-style dark navy.
+   Applied only to the tile pane so route lines and markers are unaffected.
+----------------------------------------------------------------------- */
+#map.dark-tiles .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.6);
+}
+
+/* -----------------------------------------------------------------------
    Map theme toggle button
 ----------------------------------------------------------------------- */
 #map-theme-btn {
@@ -1453,31 +1461,19 @@
     const map = L.map("map").setView([48.2082, 16.3738], 11);
 
     // Tile layers — light (default) and dark
-    const TILE_LIGHT = L.tileLayer(
+    L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
       { attribution: "© OpenStreetMap contributors © CARTO" }
-    );
-    const TILE_DARK = L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      { attribution: "© OpenStreetMap contributors © CARTO" }
-    );
+    ).addTo(map);
+
     let darkMapActive = false;
-    TILE_LIGHT.addTo(map);
 
     function toggleMapTheme() {
       const btn = document.getElementById("map-theme-btn");
-      if (darkMapActive) {
-        map.removeLayer(TILE_DARK);
-        TILE_LIGHT.addTo(map);
-        btn.textContent = "🌙";
-        btn.classList.remove("dark");
-      } else {
-        map.removeLayer(TILE_LIGHT);
-        TILE_DARK.addTo(map);
-        btn.textContent = "☀️";
-        btn.classList.add("dark");
-      }
       darkMapActive = !darkMapActive;
+      document.getElementById("map").classList.toggle("dark-tiles", darkMapActive);
+      btn.textContent = darkMapActive ? "☀️" : "🌙";
+      btn.classList.toggle("dark", darkMapActive);
     }
 
     
