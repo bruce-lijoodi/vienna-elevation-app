@@ -1435,6 +1435,10 @@ body.dark-mode .expand-profile-btn { color: #c9a84c; }
     z-index: 100;
     pointer-events: none;
   }
+  /* Dark mode gives #sidebar a solid navy background for the desktop panel —
+     but on mobile it's a full-screen overlay, so that fill would paint over
+     the map. Keep it transparent; the search/results panels carry their own bg. */
+  body.dark-mode #sidebar { background: transparent; }
 
   /* Search card floats at the top — like Google Maps search bar.
      Hidden by default on mobile; revealed by tapping the search FAB. */
