@@ -809,6 +809,79 @@
 
 
 /* -----------------------------------------------------------------------
+   Dark mode — sidebar and UI elements
+----------------------------------------------------------------------- */
+body.dark-mode { background: #0d1117; }
+
+body.dark-mode #sidebar,
+body.dark-mode #search-panel,
+body.dark-mode #results-panel {
+  background: #16213e;
+  color: #e0e0e0;
+}
+
+body.dark-mode #sidebar h2,
+body.dark-mode #sidebar h3 { color: #c9a84c; }
+
+body.dark-mode .input-group label,
+body.dark-mode .control-group > label { color: #c9a84c; }
+
+body.dark-mode .input-group input {
+  background: #0d1b2a;
+  border-color: #2a3a52;
+  color: #e0e0e0;
+}
+body.dark-mode .input-group input::placeholder { color: #556; }
+body.dark-mode .input-group input:focus {
+  border-color: #c9a84c;
+  box-shadow: 0 0 0 2px rgba(201,168,76,0.2);
+}
+
+body.dark-mode .suggestions {
+  background: #0d1b2a;
+  border-color: #2a3a52;
+}
+body.dark-mode .suggestion-item { color: #e0e0e0; }
+body.dark-mode .suggestion-item:hover { background: #1a2c45; }
+
+body.dark-mode .location-btn {
+  border-color: #c9a84c;
+  color: #c9a84c;
+  background: transparent;
+}
+body.dark-mode .location-btn:hover { background: rgba(201,168,76,0.1); }
+
+body.dark-mode #get-routes-btn {
+  background: linear-gradient(135deg, #c9a84c, #e6b800);
+  color: #1a1a2e;
+  border-bottom-color: #a07c28;
+}
+
+body.dark-mode #lap-btn {
+  background: #0d1b2a;
+  border-color: #2a3a52;
+  color: #e0e0e0;
+}
+body.dark-mode #lap-btn:hover,
+body.dark-mode #lap-btn.active { background: #1a2c45; border-color: #c9a84c; color: #c9a84c; }
+
+body.dark-mode .lap-chip {
+  background: #0d1b2a;
+  border-color: #2a3a52;
+  color: #e0e0e0;
+}
+body.dark-mode .lap-chip:hover { background: #1a2c45; border-color: #c9a84c; color: #c9a84c; }
+
+body.dark-mode .route-card.flattest { background: #0d2118; border-color: #1aab68; }
+body.dark-mode .route-card.balanced { background: #1e1800; border-color: #e6a817; }
+body.dark-mode .route-card.steepest { background: #200d0d; border-color: #d93025; }
+body.dark-mode .route-card .stats   { color: #aaa; }
+
+body.dark-mode #instructions { color: #667; }
+
+body.dark-mode #chart-container h2 { color: #c9a84c; }
+
+/* -----------------------------------------------------------------------
    Dark map — CSS filter on tiles gives Google Maps-style dark navy.
    Applied only to the tile pane so route lines and markers are unaffected.
 ----------------------------------------------------------------------- */
@@ -1472,6 +1545,7 @@
       const btn = document.getElementById("map-theme-btn");
       darkMapActive = !darkMapActive;
       document.getElementById("map").classList.toggle("dark-tiles", darkMapActive);
+      document.body.classList.toggle("dark-mode", darkMapActive);
       btn.textContent = darkMapActive ? "☀️" : "🌙";
       btn.classList.toggle("dark", darkMapActive);
     }
