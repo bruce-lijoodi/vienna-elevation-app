@@ -1030,6 +1030,10 @@ body.dark-mode #chart-container h2 { color: #c9a84c; }
 #lap-fab { display: none; }
 #lap-fab-panel { display: none; }
 
+/* Search FAB + card close button — mobile only (shown in the ≤640 block) */
+#search-fab { display: none; }
+#search-close { display: none; }
+
 @media (max-width: 768px) {
   /* Hide lap controls from the sidebar */
   #lap-btn, #lap-chips { display: none !important; }
@@ -1418,9 +1422,10 @@ body.dark-mode #chart-container h2 { color: #c9a84c; }
     pointer-events: none;
   }
 
-  /* Search card floats at the top — like Google Maps search bar */
+  /* Search card floats at the top — like Google Maps search bar.
+     Hidden by default on mobile; revealed by tapping the search FAB. */
   #search-panel {
-    display: flex;
+    display: none;
     flex-direction: column;
     gap: 10px;
     pointer-events: all;
@@ -1433,6 +1438,53 @@ body.dark-mode #chart-container h2 { color: #c9a84c; }
     padding: 14px;
     box-shadow: 0 4px 24px rgba(0,0,0,0.22);
   }
+  #search-panel.open { display: flex; }
+
+  /* Floating search toggle — top-left, mirrors the Lap FAB styling */
+  #search-fab {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 150;
+    pointer-events: all;
+    background: #faf8f4;
+    color: #1a1a2e;
+    border: none;
+    border-radius: 14px;
+    padding: 11px 16px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.22);
+  }
+  #search-fab:active { background: #ece7dd; }
+  /* When the card is open, the FAB gives way to the card's own ✕ button */
+  #app.search-open #search-fab { display: none; }
+
+  /* Close (✕) button on the search card — mobile only */
+  #search-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.06);
+    color: #1a1a2e;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  #search-close:active { background: rgba(0,0,0,0.12); }
 
   /* Hide the "Set Your Route" heading and contours toggle on mobile */
   #search-panel > h2,
@@ -1779,6 +1831,9 @@ body.dark-mode #chart-container h2 { color: #c9a84c; }
           <button class="lap-chip" onclick="getLoopRoutes(20)">20 km</button>
           <button class="lap-chip" onclick="getLoopRoutes(30)">30 km</button>
         </div>
+
+        <!-- Close (✕) — absolutely positioned top-right; mobile only -->
+        <button id="search-close" onclick="closeSearchPanel()" title="Close" aria-label="Close search">✕</button>
       </div>
 
       <!-- Results section: becomes bottom sheet on mobile -->
@@ -1845,6 +1900,9 @@ body.dark-mode #chart-container h2 { color: #c9a84c; }
 
     <!-- Dark map toggle button -->
     <button id="map-theme-btn" onclick="toggleMapTheme()" title="Toggle dark map">🌙</button>
+
+    <!-- Mobile-only: search toggle — opens the route search card -->
+    <button id="search-fab" onclick="toggleSearchPanel()" aria-label="Plan a route">🔍 Plan route</button>
 
     <!-- Mobile-only: Take a Lap floating button -->
     <button id="lap-fab" onclick="toggleLapFab()" title="Take a Lap">🔁 Lap</button>
@@ -2406,6 +2464,7 @@ function toggleContours() {
       // Immediately pan to fit both points before the API responds
       fitMapToBounds(L.latLngBounds([[origin_lat, origin_lon], [dest_lat, dest_lon]]));
 
+      closeSearchPanel();   // collapse the card so the map + results are visible
       document.getElementById("loading").style.display = "block";
 
       try {
@@ -2644,6 +2703,16 @@ function toggleLapFab() {
 }
 function closeLapFab() {
   document.getElementById("lap-fab-panel").classList.remove("open");
+}
+
+// Mobile: the search card starts hidden; the search FAB toggles it open.
+function toggleSearchPanel() {
+  const open = document.getElementById("search-panel").classList.toggle("open");
+  document.getElementById("app").classList.toggle("search-open", open);
+}
+function closeSearchPanel() {
+  document.getElementById("search-panel").classList.remove("open");
+  document.getElementById("app").classList.remove("search-open");
 }
 
 function toggleMobileChart(index) {
