@@ -2570,13 +2570,24 @@ function toggleContours() {
 
     function fitMapToBounds(bounds, maxZoom) {
       const isMobile = window.innerWidth <= 768;
-      const bottomPad = isMobile ? Math.round(window.innerHeight * 0.50) : 40;
-      const opts = {
-        paddingTopLeft:     [40, 40],
-        paddingBottomRight: [40, bottomPad],
-      };
-      if (maxZoom) opts.maxZoom = maxZoom;
-      map.fitBounds(bounds, opts);
+      if (!isMobile) {
+        const opts = { padding: [40, 40] };
+        if (maxZoom) opts.maxZoom = maxZoom;
+        map.fitBounds(bounds, opts);
+        return;
+      }
+      // On mobile, wait for the results sheet animation (0.4s) to finish,
+      // then measure its actual rendered height and use that as bottom padding.
+      setTimeout(() => {
+        const panel = document.getElementById("results-panel");
+        const panelH = panel.classList.contains("visible") ? panel.offsetHeight : 0;
+        const opts = {
+          paddingTopLeft:     [20, 20],
+          paddingBottomRight: [20, panelH + 16],
+        };
+        if (maxZoom) opts.maxZoom = maxZoom;
+        map.fitBounds(bounds, opts);
+      }, 450);
     }
 
     // -------------------------------------------------------------------------
