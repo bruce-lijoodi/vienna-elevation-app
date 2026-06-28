@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Vienna Elevation Router</title>
 
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+
   <!-- Leaflet CSS — styles for the map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
@@ -24,19 +27,46 @@
     }
 
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f2f5;
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      background: #f0ede6;
       color: #333;
     }
 
     /* Top navigation bar */
     header {
-      background: #1a1a2e;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0d2137 100%);
       color: white;
-      padding: 14px 24px;
+      padding: 12px 24px;
+      border-bottom: 2px solid #c9a84c;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    .header-brand { display: flex; flex-direction: column; }
+    .header-title {
       font-size: 1.2rem;
-      font-weight: bold;
-      letter-spacing: 1px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .header-title .vienna-gold {
+      font-family: 'Playfair Display', serif;
+      color: #c9a84c;
+    }
+    .header-subtitle {
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .header-skyline {
+      opacity: 0.18;
+      position: absolute;
+      right: 20px;
+      bottom: 0;
+      height: 46px;
     }
 
     /* Main layout: sidebar on the left, map on the right */
@@ -50,10 +80,10 @@
     ----------------------------------------------------------------------- */
     #sidebar {
       width: 340px;
-      background: white;
+      background: #faf8f4;
       padding: 20px;
       overflow-y: auto;
-      box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+      box-shadow: 2px 0 10px rgba(0,0,0,0.08);
       display: flex;
       flex-direction: column;
       gap: 16px;
@@ -89,7 +119,8 @@
 
     .input-group input:focus {
       outline: none;
-      border-color: #4a90d9;
+      border-color: #c9a84c;
+      box-shadow: 0 0 0 2px rgba(201,168,76,0.15);
     }
 
     /* Suggestions dropdown for address search */
@@ -116,8 +147,8 @@
     /* Current location button */
     .location-btn {
       background: none;
-      border: 1px solid #4a90d9;
-      color: #4a90d9;
+      border: 1px solid #c9a84c;
+      color: #a07c28;
       padding: 6px 10px;
       border-radius: 6px;
       font-size: 0.8rem;
@@ -128,7 +159,7 @@
     }
 
     .location-btn:hover {
-      background: #f0f7ff;
+      background: #fdf6e3;
     }
 
     /* Routing engine toggle */
@@ -175,19 +206,23 @@
 
     /* The "Get Routes" button */
     #get-routes-btn {
-      background: #1a1a2e;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
       color: white;
       border: none;
+      border-bottom: 2px solid #c9a84c;
       padding: 12px;
       border-radius: 8px;
       font-size: 0.95rem;
       cursor: pointer;
       font-weight: 600;
-      transition: background 0.2s;
+      transition: all 0.2s;
+      letter-spacing: 0.3px;
     }
 
     #get-routes-btn:hover {
-      background: #4a90d9;
+      background: linear-gradient(135deg, #c9a84c 0%, #e6b800 100%);
+      color: #1a1a2e;
+      border-bottom-color: #a07c28;
     }
 
     /* Instruction text shown before routes are loaded */
@@ -212,14 +247,14 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.12);
     }
 
-    /* Each profile has its own colour */
-    .route-card.flattest  { background: #e8f5e9; border-color: #4caf50; }
-    .route-card.balanced  { background: #fff8e1; border-color: #ff9800; }
-    .route-card.steepest  { background: #fce4ec; border-color: #e91e63; }
+    /* Each profile has its own colour — Vienna themed */
+    .route-card.flattest  { background: #e8f3ec; border-color: #2d6a4f; } /* Wienerwald green */
+    .route-card.balanced  { background: #fdf6e3; border-color: #c9a84c; } /* Habsburg gold */
+    .route-card.steepest  { background: #fdecea; border-color: #c0392b; } /* Austrian red */
 
     /* Highlight the selected route */
     .route-card.active {
-      box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.5);
+      box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.45);
     }
 
     .route-card h3 {
@@ -291,8 +326,8 @@
       transition: background 0.2s, border-color 0.2s, color 0.2s;
       width: 100%;
     }
-    #lap-btn:hover { background: #f0f7ff; border-color: #4a90d9; color: #4a90d9; }
-    #lap-btn.active { background: #e8f0fe; border-color: #4a90d9; }
+    #lap-btn:hover { background: #fdf6e3; border-color: #c9a84c; color: #a07c28; }
+    #lap-btn.active { background: #fdf6e3; border-color: #c9a84c; color: #a07c28; }
 
     /* Distance chips revealed under the lap button */
     #lap-chips {
@@ -314,7 +349,7 @@
       color: #1a1a2e;
       transition: background 0.2s, border-color 0.2s;
     }
-    .lap-chip:hover { background: #e8f0fe; border-color: #4a90d9; }
+    .lap-chip:hover { background: #fdf6e3; border-color: #c9a84c; color: #a07c28; }
 
     /* Navigate button on each route card */
     .nav-btn {
@@ -423,10 +458,11 @@
     }
 
     .control-group > label {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       font-weight: 600;
-      color: #666;
+      color: #a07c28;
       text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
 
@@ -1044,7 +1080,40 @@
 <body>
 
   <!-- Header -->
-  <header>🗺️ Vienna Elevation Router</header>
+  <header>
+    <div class="header-brand">
+      <div class="header-title"><span class="vienna-gold">Vienna</span> Elevation Router</div>
+      <div class="header-subtitle">Explore the city by elevation</div>
+    </div>
+    <svg class="header-skyline" width="220" height="46" viewBox="0 0 220 46" fill="white" xmlns="http://www.w3.org/2000/svg">
+      <!-- Rathaus -->
+      <rect x="18" y="22" width="32" height="24" fill="white"/>
+      <rect x="30" y="10" width="8" height="14" fill="white"/>
+      <polygon points="30,10 34,3 38,10" fill="white"/>
+      <rect x="19" y="15" width="6" height="9" fill="white"/>
+      <polygon points="19,15 22,10 25,15" fill="white"/>
+      <rect x="43" y="15" width="6" height="9" fill="white"/>
+      <polygon points="43,15 46,10 49,15" fill="white"/>
+      <!-- Stephansdom -->
+      <rect x="88" y="30" width="18" height="16" fill="white"/>
+      <rect x="84" y="22" width="26" height="10" fill="white"/>
+      <polygon points="84,22 97,6 110,22" fill="white"/>
+      <rect x="95" y="0" width="4" height="8" fill="white"/>
+      <rect x="80" y="32" width="7" height="14" fill="white"/>
+      <polygon points="80,32 83.5,25 87,32" fill="white"/>
+      <rect x="113" y="32" width="7" height="14" fill="white"/>
+      <polygon points="113,32 116.5,25 120,32" fill="white"/>
+      <!-- Riesenrad -->
+      <circle cx="185" cy="22" r="15" stroke="white" stroke-width="1.5" fill="none"/>
+      <line x1="185" y1="7" x2="185" y2="37" stroke="white" stroke-width="0.8"/>
+      <line x1="170" y1="22" x2="200" y2="22" stroke="white" stroke-width="0.8"/>
+      <line x1="174.4" y1="11.4" x2="195.6" y2="32.6" stroke="white" stroke-width="0.8"/>
+      <line x1="174.4" y1="32.6" x2="195.6" y2="11.4" stroke="white" stroke-width="0.8"/>
+      <rect x="182" y="37" width="6" height="9" fill="white"/>
+      <!-- Ground -->
+      <line x1="0" y1="46" x2="220" y2="46" stroke="white" stroke-width="0.5"/>
+    </svg>
+  </header>
 
   <!-- Loading indicator -->
   <div id="loading">⏳ Calculating routes...</div>
@@ -1210,9 +1279,9 @@
 
     // Colours for each route profile on the map
     const PROFILE_COLORS = {
-      flattest: "#4caf50",  // Green
-      balanced: "#ff9800",  // Orange
-      steepest: "#e91e63",  // Pink/Red
+      flattest: "#2d6a4f",  // Wienerwald green
+      balanced: "#c9a84c",  // Habsburg gold
+      steepest: "#c0392b",  // Austrian red
     };
 
     // -------------------------------------------------------------------------
@@ -2066,6 +2135,9 @@ function renderElevationChart(route) {
   if (elevationChart) elevationChart.destroy();
 
   const ctx = document.getElementById("elevation-chart").getContext("2d");
+  const chartGradient = ctx.createLinearGradient(0, 0, 0, 160);
+  chartGradient.addColorStop(0, PROFILE_COLORS[route.profile] + "88");
+  chartGradient.addColorStop(1, PROFILE_COLORS[route.profile] + "00");
   elevationChart = new Chart(ctx, {
     type: "line",
     data: {
@@ -2073,7 +2145,7 @@ function renderElevationChart(route) {
         label: "Elevation (m)",
         data: chartData,
         borderColor: PROFILE_COLORS[route.profile],
-        backgroundColor: PROFILE_COLORS[route.profile] + "33",
+        backgroundColor: chartGradient,
         borderWidth: 2,
         pointRadius: 0,
         fill: true,
