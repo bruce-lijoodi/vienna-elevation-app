@@ -2561,11 +2561,22 @@ function toggleContours() {
         }
       });
 
-      // Zoom the map to fit all routes
+      // Zoom the map to fit all routes, accounting for bottom sheet on mobile
       if (routeLayers.length > 0) {
         const group = L.featureGroup(routeLayers);
-        map.fitBounds(group.getBounds(), { padding: [40, 40] });
+        fitMapToBounds(group.getBounds());
       }
+    }
+
+    function fitMapToBounds(bounds, maxZoom) {
+      const isMobile = window.innerWidth <= 768;
+      const bottomPad = isMobile ? Math.round(window.innerHeight * 0.50) : 40;
+      const opts = {
+        paddingTopLeft:     [40, 40],
+        paddingBottomRight: [40, bottomPad],
+      };
+      if (maxZoom) opts.maxZoom = maxZoom;
+      map.fitBounds(bounds, opts);
     }
 
     // -------------------------------------------------------------------------
@@ -2709,9 +2720,7 @@ function renderRouteCards(routes) {
           if (i === index) {
             layer.bringToFront();
             // Pan/zoom so the full route is visible
-            try {
-              map.fitBounds(layer.getBounds(), { padding: [40, 40], maxZoom: 16 });
-            } catch(e) {}
+            try { fitMapToBounds(layer.getBounds(), 16); } catch(e) {}
           }
         }
       });
