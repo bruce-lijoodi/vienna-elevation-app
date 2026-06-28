@@ -2416,6 +2416,9 @@ function toggleContours() {
         drawRoutes(currentRoutes);
         renderRouteCards(currentRoutes);
         selectRoute(0);
+        // Fit after the sheet is visible so offsetHeight is correct
+        const group = L.featureGroup(routeLayers);
+        fitMapToBounds(group.getBounds());
 
       } catch (err) {
         alert("Could not connect to the backend. Make sure the server is running.");
@@ -2467,6 +2470,8 @@ function toggleContours() {
         drawRoutes(currentRoutes);
         renderRouteCards(currentRoutes);
         selectRoute(0);
+        const group = L.featureGroup(routeLayers);
+        fitMapToBounds(group.getBounds());
 
       } catch (err) {
         alert("Could not connect to the backend. Make sure the server is running.");
@@ -2561,33 +2566,20 @@ function toggleContours() {
         }
       });
 
-      // Zoom the map to fit all routes, accounting for bottom sheet on mobile
-      if (routeLayers.length > 0) {
-        const group = L.featureGroup(routeLayers);
-        fitMapToBounds(group.getBounds());
-      }
     }
 
     function fitMapToBounds(bounds, maxZoom) {
       const isMobile = window.innerWidth <= 768;
-      if (!isMobile) {
-        const opts = { padding: [40, 40] };
-        if (maxZoom) opts.maxZoom = maxZoom;
-        map.fitBounds(bounds, opts);
-        return;
-      }
-      // On mobile, wait for the results sheet animation (0.4s) to finish,
-      // then measure its actual rendered height and use that as bottom padding.
-      setTimeout(() => {
-        const panel = document.getElementById("results-panel");
-        const panelH = panel.classList.contains("visible") ? panel.offsetHeight : 0;
-        const opts = {
-          paddingTopLeft:     [20, 20],
-          paddingBottomRight: [20, panelH + 16],
-        };
-        if (maxZoom) opts.maxZoom = maxZoom;
-        map.fitBounds(bounds, opts);
-      }, 450);
+      // On mobile the results sheet covers ~200px from the map bottom,
+      // so push the bottom padding in by that amount so routes stay visible.
+      const mapEl = document.getElementById("map");
+      const bottomPad = isMobile ? Math.round(mapEl.offsetHeight * 0.48) : 40;
+      const opts = {
+        paddingTopLeft:     [24, 24],
+        paddingBottomRight: [24, bottomPad],
+      };
+      if (maxZoom) opts.maxZoom = maxZoom;
+      map.fitBounds(bounds, opts);
     }
 
     // -------------------------------------------------------------------------
