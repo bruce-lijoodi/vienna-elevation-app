@@ -546,6 +546,9 @@
       cursor: not-allowed;
     }
 
+    /* Hidden on desktop, shown on mobile to reveal chart/refine on demand */
+    .card-extra-actions { display: none; }
+
     .unit-toggle {
       display: flex;
       border: 1px solid #ccc;
@@ -736,13 +739,32 @@
         font-size: 0.8rem;
       }
 
-      /* Tighten the refine row so it fits in one line */
-      .card-refine {
-        flex-wrap: wrap;
-        gap: 5px;
-        margin-top: 8px;
-        padding-top: 8px;
+      /* Elevation chart + refine hidden by default on mobile */
+      #chart-container { display: none; }
+      .card-refine { display: none; }
+      .card-refine.open { display: flex; flex-wrap: wrap; gap: 5px; }
+
+      /* Extra action row — shown on mobile only */
+      .card-extra-actions {
+        display: flex;
+        gap: 6px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(0,0,0,0.08);
       }
+      .card-extra-btn {
+        flex: 1;
+        background: none;
+        border: 1px solid rgba(0,0,0,0.12);
+        border-radius: 8px;
+        padding: 6px 4px;
+        font-size: 0.73rem;
+        cursor: pointer;
+        color: #555;
+        font-family: inherit;
+        transition: background 0.15s, border-color 0.15s;
+      }
+      .card-extra-btn:active { background: rgba(0,0,0,0.06); }
 
       /* Small swipe hint label below cards */
       #route-cards-hint {
@@ -927,6 +949,9 @@ body.dark-mode .route-card.flattest { background: #0d2118; border-color: #1aab68
 body.dark-mode .route-card.balanced { background: #1e1800; border-color: #e6a817; }
 body.dark-mode .route-card.steepest { background: #200d0d; border-color: #d93025; }
 body.dark-mode .route-card .stats   { color: #aaa; }
+body.dark-mode .card-extra-actions  { border-top-color: rgba(255,255,255,0.08); }
+body.dark-mode .card-extra-btn      { border-color: #2a3a52; color: #7a91b0; }
+body.dark-mode .card-extra-btn:active { background: rgba(255,255,255,0.05); }
 
 body.dark-mode #instructions { color: #667; }
 
@@ -2495,6 +2520,22 @@ function showResultsSheet() {
   document.getElementById("results-panel").classList.add("visible");
 }
 
+function toggleMobileChart(index) {
+  const container = document.getElementById("chart-container");
+  const isOpen = container.style.display === "block";
+  if (isOpen) {
+    container.style.display = "";
+  } else {
+    renderElevationChart(currentRoutes[index]);
+    container.style.display = "block";
+    setTimeout(() => container.scrollIntoView({ behavior: "smooth", block: "nearest" }), 60);
+  }
+}
+
+function toggleMobileRefine(index) {
+  document.getElementById(`card-refine-${index}`).classList.toggle("open");
+}
+
 function renderRouteCards(routes) {
   document.getElementById("instructions").style.display = "none";
   showResultsSheet();
@@ -2525,7 +2566,7 @@ function renderRouteCards(routes) {
         <button class="nav-btn" onclick="event.stopPropagation(); startNavigation(${index})">▶ Navigate</button>
         <button class="gpx-btn" onclick="event.stopPropagation(); downloadGPX(${index})" title="Download GPX">⬇️</button>
       </div>
-      <div class="card-refine" onclick="event.stopPropagation()">
+      <div class="card-refine" id="card-refine-${index}" onclick="event.stopPropagation()">
         <span class="refine-label">Adjust:</span>
         <input type="number" class="refine-input" id="refine-${index}"
           value="${defaultVal}" step="${unit === 'min' ? 5 : 0.5}" min="${defaultMin}"
@@ -2538,6 +2579,10 @@ function renderRouteCards(routes) {
         </div>
         <button class="refine-btn" id="refine-btn-${index}"
           onclick="adjustRoute(${index}, '${route.profile}')">↺ Refine</button>
+      </div>
+      <div class="card-extra-actions">
+        <button class="card-extra-btn" onclick="event.stopPropagation(); toggleMobileChart(${index})">📈 Elevation</button>
+        <button class="card-extra-btn" onclick="event.stopPropagation(); toggleMobileRefine(${index})">↺ Adjust</button>
       </div>
     `;
 
@@ -2695,7 +2740,9 @@ function renderRouteCards(routes) {
     // -------------------------------------------------------------------------
 
 function renderElevationChart(route) {
-  document.getElementById("chart-container").style.display = "block";
+  if (window.innerWidth > 768) {
+    document.getElementById("chart-container").style.display = "block";
+  }
 
   const chartData = route.elevation_profile.map(p => ({
     x: parseFloat((p.distance / 1000).toFixed(3)),
