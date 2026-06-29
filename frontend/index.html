@@ -2400,6 +2400,9 @@ function toggleContours() {
       const { lat: origin_lat, lon: origin_lon } = origin;
       const { lat: dest_lat,   lon: dest_lon }   = dest;
 
+      // Immediately pan to fit both points before the API responds
+      fitMapToBounds(L.latLngBounds([[origin_lat, origin_lon], [dest_lat, dest_lon]]));
+
       document.getElementById("loading").style.display = "block";
 
       try {
