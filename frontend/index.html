@@ -1782,12 +1782,6 @@ body.dark-mode #chart-container h2 { color: #c9a84c; }
       <div id="results-panel">
         <div class="sheet-handle" onclick="toggleResultsSheet()"></div>
 
-        <!-- Instructions shown before any routes are loaded -->
-        <p id="instructions">
-          Search for an address above to set your origin and destination.
-          You will get 3 routes ranked from flattest to steepest.
-        </p>
-
         <!-- Route cards will be inserted here dynamically -->
         <div id="route-cards"></div>
         <span id="route-cards-hint" style="display:none">← swipe to see all routes →</span>
@@ -2663,7 +2657,6 @@ function toggleMobileRefine(index) {
 }
 
 function renderRouteCards(routes) {
-  document.getElementById("instructions").style.display = "none";
   showResultsSheet();
   const container = document.getElementById("route-cards");
   container.innerHTML = "";
