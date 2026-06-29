@@ -1377,6 +1377,10 @@ body.dark-mode #chart-container h2 { color: #c9a84c; }
 #results-panel { display: contents; }
 .sheet-handle  { display: none; }
 
+/* Trigger hidden on desktop; form always visible */
+#get-directions-trigger { display: none; }
+#route-form { display: contents; }
+
 /* -----------------------------------------------------------------------
    Mobile layout — Google Maps style
 ----------------------------------------------------------------------- */
@@ -1433,6 +1437,25 @@ body.dark-mode #chart-container h2 { color: #c9a84c; }
   /* Hide the "Set Your Route" heading and contours toggle on mobile */
   #search-panel > h2,
   #search-panel > .location-btn:first-of-type { display: none; }
+
+  /* Route form hidden by default on mobile — revealed by trigger */
+  #route-form { display: none; }
+  #route-form.open { display: flex; flex-direction: column; gap: 8px; }
+
+  /* Trigger button — styled like the main action button */
+  #get-directions-trigger {
+    width: 100%;
+    background: #1a1a2e;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  body.dark-mode #get-directions-trigger { background: #c9a84c; color: #0d1117; }
 
   /* Results bottom sheet — slides up when routes are ready */
   #results-panel {
@@ -1746,24 +1769,30 @@ body.dark-mode #chart-container h2 { color: #c9a84c; }
         <h2>Set Your Route</h2>
         <button class="location-btn" onclick="toggleContours()">〰️ Toggle contours</button>
 
-        <!-- Origin input -->
-        <div class="input-group">
-          <label>📍 Origin</label>
-          <input type="text" id="origin-input" placeholder="e.g. Stephansdom, Vienna" />
-          <div id="origin-suggestions" class="suggestions"></div>
-          <button id="origin-loc-btn" class="location-btn" onclick="useMyLocation('origin')">📡 Use my current location</button>
-        </div>
+        <!-- Mobile-only trigger button — hidden on desktop -->
+        <button id="get-directions-trigger" onclick="toggleRouteForm()">🗺️ Get Directions</button>
 
-        <!-- Destination input -->
-        <div class="input-group">
-          <label>🏁 Destination</label>
-          <input type="text" id="dest-input" placeholder="e.g. Grinzing, Vienna" />
-          <div id="dest-suggestions" class="suggestions"></div>
-          <button id="dest-loc-btn" class="location-btn" onclick="useMyLocation('destination')">📡 Use my current location</button>
-        </div>
+        <!-- Route form: always visible on desktop, toggled on mobile -->
+        <div id="route-form">
+          <!-- Origin input -->
+          <div class="input-group">
+            <label>📍 Origin</label>
+            <input type="text" id="origin-input" placeholder="e.g. Stephansdom, Vienna" />
+            <div id="origin-suggestions" class="suggestions"></div>
+            <button id="origin-loc-btn" class="location-btn" onclick="useMyLocation('origin')">📡 Use my current location</button>
+          </div>
 
-        <!-- Get Routes button -->
-        <button id="get-routes-btn" onclick="getRoutes()">Get Directions</button>
+          <!-- Destination input -->
+          <div class="input-group">
+            <label>🏁 Destination</label>
+            <input type="text" id="dest-input" placeholder="e.g. Grinzing, Vienna" />
+            <div id="dest-suggestions" class="suggestions"></div>
+            <button id="dest-loc-btn" class="location-btn" onclick="useMyLocation('destination')">📡 Use my current location</button>
+          </div>
+
+          <!-- Search button -->
+          <button id="get-routes-btn" onclick="getRoutes()">Search Routes →</button>
+        </div>
 
         <!-- Take a Lap button + distance chips -->
         <button id="lap-btn" onclick="takeLap()">🔁 Take a Lap</button>
@@ -2430,6 +2459,7 @@ function toggleContours() {
         drawRoutes(currentRoutes);
         renderRouteCards(currentRoutes);
         selectRoute(0, true); // fit handled by group fitBounds below
+        closeRouteForm();
         // Fit after the sheet is visible so offsetHeight is correct
         const group = L.featureGroup(routeLayers);
         fitMapToBounds(group.getBounds());
@@ -2634,6 +2664,19 @@ function toggleResultsSheet() {
 
 function showResultsSheet() {
   document.getElementById("results-panel").classList.add("visible");
+}
+
+function toggleRouteForm() {
+  const form = document.getElementById("route-form");
+  const trigger = document.getElementById("get-directions-trigger");
+  const isOpen = form.classList.toggle("open");
+  trigger.textContent = isOpen ? "✕ Close" : "🗺️ Get Directions";
+}
+
+function closeRouteForm() {
+  if (window.innerWidth > 768) return;
+  document.getElementById("route-form").classList.remove("open");
+  document.getElementById("get-directions-trigger").textContent = "🗺️ Get Directions";
 }
 
 function toggleLapFab() {
